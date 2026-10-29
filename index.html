@@ -1,1 +1,1796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#161A22">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Class Notebook">
+<title>Class Notebook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+/* the theme (chosen in the cog) sets these colors; see THEMES in the script */
+:root{
+  --sky:#161A22; --sky2:#1C212B; --panel:#222936; --panel2:#2A3242; --line:#39445A;
+  --ice:#B8C7DD; --amber:#F2C14E; --ink:#1A1306; --text:#E8EEF5; --muted:#9AA8BA; --done:#86D4A9; --soft:#D5DDE8;
+  --amberSoft:rgba(242,193,78,.1); --amberMark:rgba(242,193,78,.28); --iceSoft:rgba(184,199,221,.1); --glass:rgba(34,41,54,.8);
+  --head:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+  color-scheme:dark; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  background:var(--sky);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100%;background:var(--sky);color:var(--text);font-family:var(--body);font-size:17px;line-height:1.55;-webkit-tap-highlight-color:transparent}
+h1,h2,h3,h4{font-family:var(--head);margin:0;line-height:1.15}
+p{margin:0 0 .8em}
+button,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--amber);outline-offset:3px;border-radius:8px}
+.view{display:none}
+.view.on{display:block}
 
+/* Title */
+#title{position:relative;min-height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow:hidden}
+#title.on{display:flex;flex-direction:column}
+.stars{position:absolute;inset:0;pointer-events:none}
+.star{position:absolute;border-radius:50%;background:#fff}
+.star.tw{animation:tw 4s ease-in-out infinite}
+@keyframes tw{50%{opacity:.15}}
+.bit{position:absolute;color:var(--ice);font-family:var(--head);font-weight:600;line-height:1;white-space:nowrap}
+.bit.fl{animation:fl 8s ease-in-out infinite}
+@keyframes fl{50%{transform:translateY(-14px)}}
+.art{position:absolute;left:0;right:0;bottom:0;width:100%;height:30vh;max-height:260px;pointer-events:none;animation:rise 1.6s cubic-bezier(.2,.7,.2,1) both}
+@keyframes rise{from{transform:translateY(40%);opacity:0}to{transform:none;opacity:1}}
+.title-inner{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;padding:32px 24px calc(30vh + 24px);max-width:520px;width:100%;margin:0 auto}
+.title-inner h1{font-weight:800;font-size:clamp(2.4rem,11vw,3.8rem);letter-spacing:-.02em;line-height:.98;margin-bottom:14px;overflow-wrap:anywhere}
+.title-inner h1 span{display:block;font-weight:600;font-size:.52em;letter-spacing:0;color:var(--ice);margin-top:10px}
+.lede{color:var(--muted);margin-bottom:26px}
+.welcome{background:var(--glass);border:1.5px solid var(--line);border-radius:18px;padding:16px 18px;margin-bottom:8px}
+.welcome b{color:var(--amber)}
+.welcome p:last-child{margin:0}
+.picker{display:flex;gap:10px}
+.select-wrap{position:relative;flex:1;min-width:0}
+.select-wrap::after{content:"";position:absolute;right:16px;top:50%;width:9px;height:9px;border-right:2px solid var(--ice);border-bottom:2px solid var(--ice);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+select{width:100%;appearance:none;-webkit-appearance:none;background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:14px 40px 14px 16px;font-size:17px}
+.btn{border:0;border-radius:14px;padding:14px 22px;font-weight:700;cursor:pointer;background:var(--amber);color:var(--ink)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.ghost{background:transparent;color:var(--ice);border:1.5px solid var(--line)}
+.btn.wide{width:100%;padding:16px;font-size:18px}
+.linkish{background:none;border:0;color:var(--muted);text-decoration:underline;text-underline-offset:3px;padding:8px;cursor:pointer;font-size:15px}
+.title-foot{position:relative;z-index:1;text-align:center;padding:0 12px 10px}
+.title-foot .linkish,.title-foot .me-line{display:inline-block;background:var(--glass);border-radius:999px;padding:4px 12px;margin:2px;color:var(--soft)}
+.title-foot .me-line:empty{display:none}
+
+/* Page chrome */
+.page{max-width:680px;margin:0 auto;padding:12px 20px 40px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 18px}
+.back{background:none;border:0;color:var(--ice);font-weight:700;padding:8px 4px;cursor:pointer;font-size:16px}
+.back::before{content:"‹ ";font-size:1.2em}
+.crumb{color:var(--muted);font-size:14px;text-align:right}
+
+/* Contents */
+.toc-head h2{font-size:clamp(1.9rem,8vw,2.6rem);font-weight:800;letter-spacing:-.01em;overflow-wrap:anywhere}
+.toc-head p{color:var(--muted);margin-top:6px}
+.meter{height:6px;background:var(--panel);border-radius:6px;margin:16px 0 10px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--done);border-radius:6px;transition:width .5s}
+.hint{color:var(--muted);font-size:14px;margin:0 0 16px}
+.toc{list-style:none;margin:0;padding:0;position:relative;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.toc li{margin-bottom:12px;position:relative}
+.toc li.lifted{z-index:5}
+.toc li.lifted button{border-color:var(--amber);background:var(--panel2);box-shadow:0 14px 30px rgba(0,0,0,.45);transform:scale(1.02)}
+.toc button{width:100%;display:grid;grid-template-columns:56px 1fr auto;gap:14px;align-items:center;text-align:left;background:var(--panel);border:1.5px solid var(--line);border-radius:18px;padding:14px;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.toc svg{width:56px;height:56px;display:block}
+.toc h3{font-size:1.15rem;font-weight:600}
+.toc p{color:var(--muted);font-size:15px;margin:2px 0 0;line-height:1.4}
+.status{font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap}
+.status.done{color:var(--done)}
+.reset-row{text-align:center;margin-top:6px}
+body.dragging{cursor:grabbing}
+
+/* Cards: a topic's cheat sheet */
+.card h2{font-size:clamp(1.9rem,8vw,2.5rem);font-weight:800;letter-spacing:-.01em;margin-bottom:12px;overflow-wrap:anywhere}
+.card h3{font-size:1.3rem;font-weight:600;margin:30px 0 10px;color:var(--ice)}
+.card .intro{font-size:1.1rem}
+.card-band{height:84px;border:1.5px solid var(--line);border-radius:22px;margin:0 0 22px;overflow:hidden;background:var(--sky2)}
+.card-band svg{width:100%;height:100%;display:block}
+mark{background:var(--amberMark);color:inherit;border-radius:5px;padding:0 3px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.facts{margin:8px 0;padding-left:22px}
+.facts li{margin-bottom:8px}
+.facts li::marker{color:var(--amber)}
+.callout{background:var(--amberSoft);border-left:4px solid var(--amber);border-radius:4px 14px 14px 4px;padding:14px 16px;margin:16px 0}
+.callout strong{color:var(--amber)}
+.callout p:last-child{margin:0}
+.defs{display:grid;gap:10px;margin:12px 0}
+.def{background:var(--panel);border-radius:14px;padding:12px 14px}
+.def b{color:var(--ice)}
+.formula{background:var(--panel);border:1.5px solid var(--line);border-radius:16px;padding:12px 16px;margin:14px 0}
+.formula .ftext{font-family:var(--head);font-size:1.3rem;font-weight:600;line-height:1.35;overflow-wrap:anywhere}
+.flabel{display:inline-block;font-size:12.5px;font-weight:700;color:var(--ice);background:var(--iceSoft);border-radius:999px;padding:3px 10px;margin-bottom:6px}
+.example{background:var(--sky2);border:1.5px dashed var(--line);border-radius:16px;padding:12px 16px;margin:14px 0}
+.example p{margin:0 0 6px}
+.example ol{margin:4px 0 0;padding-left:22px}
+.example li{margin-bottom:4px}
+.example li::marker{color:var(--ice);font-weight:700}
+.next-row{margin-top:34px}
+.empty-sheet{color:var(--muted)}
+
+/* Sheet */
+.scrim{position:fixed;inset:0;background:rgba(4,10,18,.65);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.scrim.on{display:flex}
+.sheet{background:var(--panel);border:1.5px solid var(--line);border-bottom:0;border-radius:24px 24px 0 0;width:100%;max-width:560px;padding:26px 22px calc(22px + env(safe-area-inset-bottom,0px));animation:up .3s cubic-bezier(.2,.7,.2,1)}
+@keyframes up{from{transform:translateY(100%)}}
+.sheet h3{font-size:1.6rem;font-weight:800;margin-bottom:8px}
+.sheet p{color:var(--soft)}
+.sheet .row{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.sheet .row .btn{flex:1}
+.count{font-family:var(--head);font-size:3rem;font-weight:800;color:var(--amber);line-height:1;margin:6px 0 4px}
+.small{font-size:13px;color:var(--muted)}
+.sheet.tall{max-height:calc(92vh - env(safe-area-inset-top,0px));max-height:calc(92dvh - env(safe-area-inset-top,0px));overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+/* Cog, profile, games */
+.cog{position:absolute;top:12px;right:12px;z-index:2;width:46px;height:46px;border-radius:50%;border:1.5px solid var(--line);background:var(--glass);display:grid;place-items:center;cursor:pointer;padding:0}
+.cog svg{width:24px;height:24px}
+.cog path{fill:var(--ice)}
+.games-label{margin-top:22px}
+.me-line{color:var(--muted);font-size:14px;margin:0 0 2px}
+.field{display:block;margin:14px 0 6px;font-size:14px;color:var(--muted);font-weight:700}
+.inp{width:100%;background:var(--sky2);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font:inherit;font-size:17px;color:var(--text)}
+.inp.num{width:110px}
+select.inp{padding-right:40px}
+textarea.inp{min-height:150px;font-size:14px;line-height:1.4;resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace}
+textarea.inp.notes{min-height:90px}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{flex:1;border:1.5px solid var(--line);background:var(--sky2);border-radius:12px;padding:12px;font-weight:700;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ice);color:var(--sky);border-color:var(--ice)}
+.qgroup{margin:16px 0 0}
+.qgroup-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
+.qgroup-head b{font-family:var(--head);font-size:1.05rem}
+.qgroup-head .linkish{padding:4px;font-size:14px}
+.tchips{display:flex;flex-wrap:wrap;gap:8px}
+.tchip{border:1.5px solid var(--line);background:var(--sky2);border-radius:999px;padding:8px 14px;font-size:15px;cursor:pointer;text-align:left;line-height:1.3}
+.tchip small{color:var(--muted);font-size:12.5px;margin-left:4px}
+.tchip[aria-pressed="true"]{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+.tchip[aria-pressed="true"] small{color:inherit;opacity:.7}
+.tchip:disabled{opacity:.4;cursor:default}
+.msg{font-size:14px;margin:10px 0 0;color:var(--done)}
+.msg.warn{color:var(--amber)}
+.msg ul{margin:6px 0 0;padding-left:20px}
+.steps{padding-left:20px;margin:6px 0 0;color:var(--soft)}
+.steps li{margin-bottom:4px}
+.sheet hr{border:0;border-top:1px solid var(--line);margin:22px 0 4px}
+[hidden]{display:none!important}
+.check{display:flex;gap:10px;align-items:flex-start;margin:8px 0;font-size:15px;cursor:pointer}
+.check input{width:20px;height:20px;margin:1px 0 0;flex:none;accent-color:var(--amber)}
+textarea.inp.link{min-height:0;height:90px;word-break:break-all}
+.classbar{border:1.5px solid var(--amber);border-radius:14px;padding:10px 14px;margin:0 0 18px;font-size:14px;color:var(--text);background:var(--glass)}
+.classbar b{color:var(--amber)}
+
+/* Teacher settings (cog) */
+.menu{display:grid;gap:10px;margin-top:14px}
+.menu button{display:block;width:100%;text-align:left;background:var(--sky2);border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;cursor:pointer}
+.menu b{display:block;font-family:var(--head);font-size:1.1rem;font-weight:600}
+.menu button:disabled{opacity:.45;cursor:default}
+.menu span{display:block;color:var(--muted);font-size:14px;line-height:1.4;margin-top:2px}
+.themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px}
+.theme{border:2px solid var(--line);border-radius:14px;padding:0;overflow:hidden;cursor:pointer;text-align:left;background:var(--sky2)}
+.theme svg{display:block;width:100%;height:58px}
+.theme span{display:block;padding:6px 10px 8px;font-size:14px;font-weight:700;line-height:1.25}
+.theme[aria-pressed="true"]{border-color:var(--amber);box-shadow:0 0 0 2px var(--amber)}
+.unit{background:var(--sky2);border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:12px}
+.unit-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.unit-head b{flex:1;min-width:120px;font-family:var(--head);font-size:1.1rem;font-weight:600;overflow-wrap:anywhere}
+.trow{display:flex;align-items:center;gap:6px;padding:8px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.unit-head + .trow{margin-top:8px}
+.trow span{flex:1;min-width:120px;font-size:15px;overflow-wrap:anywhere}
+.trow span small{display:block;color:var(--muted);font-size:12.5px}
+.mini{border:1.5px solid var(--line);background:var(--panel);border-radius:10px;padding:6px 10px;font-size:14px;font-weight:700;cursor:pointer;color:var(--ice);line-height:1.2}
+.mini:disabled{opacity:.35;cursor:default}
+.mini.danger{color:var(--amber)}
+.preview{background:var(--sky);border:1.5px solid var(--line);border-radius:16px;padding:6px 16px 10px;margin-top:10px;max-height:340px;overflow-y:auto}
+.preview h3{font-size:1.1rem;margin:16px 0 6px}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+@media (min-width:700px){.art{height:34vh}}
+</style>
+</head>
+<body>
+
+<section id="title" class="view" aria-labelledby="app-title">
+  <div class="stars" id="stars" aria-hidden="true"></div>
+  <button class="cog" id="cogBtn" data-i18n-label="cogLabel" aria-label="Teacher settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.3 7.3 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0-.5.4l-.4 2.7a7.6 7.6 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5a.5.5 0 0 0 .6.2l2.5-1a7.3 7.3 0 0 0 1.7 1l.4 2.6a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.4l.4-2.7a7.6 7.6 0 0 0 1.7-1l2.5 1a.5.5 0 0 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg></button>
+  <div class="title-inner">
+    <div class="classbar" id="classBar" hidden></div>
+    <h1 id="app-title"></h1>
+    <p class="lede" data-i18n="lede">Study sheets and review games for each unit. Your progress saves on this device.</p>
+    <div class="welcome" id="welcome" hidden></div>
+    <div id="unitPick">
+      <label for="unit" class="small" style="display:block;margin-bottom:6px" data-i18n="openUnit">Open a unit</label>
+      <div class="picker">
+        <div class="select-wrap"><select id="unit"></select></div>
+        <button class="btn" id="openU" disabled data-i18n="open">Open</button>
+      </div>
+    </div>
+    <div id="gamePick">
+      <label for="game" class="small games-label" style="display:block;margin-bottom:6px" data-i18n="playGame">Play a review game</label>
+      <div class="picker">
+        <div class="select-wrap">
+          <select id="game">
+            <option value="" data-i18n="choose">Choose…</option>
+            <option value="hoops" data-i18n="hoops">Basketball</option>
+            <option value="derby" data-i18n="derby">Home Run Derby</option>
+            <option value="paint" data-i18n="paint">Restore the Masters (painting)</option>
+            <option value="snake" data-i18n="snake">Snake</option>
+            <option value="blasteroids" data-i18n="blasteroids">Blasteroids</option>
+            <option value="zombie" data-i18n="zombie">Zombie Horde</option>
+          </select>
+        </div>
+        <button class="btn" id="playG" disabled data-i18n="play">Play</button>
+      </div>
+    </div>
+  </div>
+  <div class="title-foot"><p class="me-line" id="meLine"></p><button class="linkish" id="profileBtn" data-i18n="changeMe">Change name, period, or language</button> <button class="linkish" id="saveCheckBtn" data-i18n="saveCheck">Save check</button></div>
+  <svg class="art" id="art" viewBox="0 0 400 120" preserveAspectRatio="xMidYMax slice" aria-hidden="true"></svg>
+</section>
+
+<section id="toc" class="view">
+  <div class="page">
+    <div class="topbar">
+      <button class="back" data-go="" data-i18n="home">Home</button>
+      <span class="crumb" id="tocCrumb"></span>
+    </div>
+    <div class="toc-head">
+      <h2 id="tocTitle"></h2>
+      <p id="tocProgress"></p>
+    </div>
+    <div class="meter" aria-hidden="true"><i id="meterFill" style="width:0"></i></div>
+    <p class="hint" data-i18n="dragHint">Press and hold a topic, then drag to move it.</p>
+    <ul class="toc" id="tocList"></ul>
+    <div class="reset-row"><button class="linkish" id="resetOrder" hidden></button></div>
+  </div>
+</section>
+
+<section id="cardView" class="view">
+  <div class="page">
+    <div class="topbar">
+      <button class="back" id="cardBack" data-i18n="contents">Contents</button>
+      <span class="crumb" id="cardCrumb"></span>
+    </div>
+    <article class="card" id="cardBody"></article>
+    <div class="next-row">
+      <button class="btn wide" id="nextBtn" data-i18n="next">Done, next topic</button>
+    </div>
+  </div>
+</section>
+
+<div class="scrim" id="scrim" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"><div class="sheet" id="sheet"></div></div>
+
+<script>
+/* =========================================================
+   CLASS NOTEBOOK
+   A blank notebook a teacher fills from the cog:
+   - Title page: course name, teacher name, and a subject theme (cover art + colors)
+   - Units: teacher-named groups, shown in the "Open a unit" menu
+   - Topics: one AI-written cheat sheet each, pasted in from an AI chat
+   - Review questions for the games, written by AI from the cheat sheets
+   Everything the teacher makes is saved in this browser (COURSE_KEY).
+   Students get it through a class link (made in the cog), which carries
+   the course inside the link itself, so there's no server.
+   ========================================================= */
+const APP_VERSION = "1.0";
+const SAVE_KEY = "digitalNotebook.save";       // the student's progress, profile, and game settings
+const COURSE_KEY = "digitalNotebook.course";   // the teacher's course (title page, units, cheat sheets, questions)
+const CLASS_KEY = "digitalNotebook.classLink"; // the class link a student opened
+const LAUNCH_KEY = "digitalNotebook.launch";   // handed to the game pages
+const SAVE_VERSION = 1;
+let storageOK = true;
+
+/* =========================================================
+   SAVE SYSTEM  (student side)
+   ========================================================= */
+function blankSave(){ return { v: SAVE_VERSION, items: {}, order: {}, lastUnit: "", saveTest: 0, profile: null, game: {} }; }
+function migrate(d){
+  if (!d || typeof d !== "object") return blankSave();
+  d.items = d.items || {}; d.order = d.order || {};
+  d.lastUnit = d.lastUnit || ""; d.saveTest = d.saveTest || 0;
+  d.profile = d.profile || null; d.game = d.game || {};
+  d.v = SAVE_VERSION;
+  return d;
+}
+function loadSave(){ try { return migrate(JSON.parse(localStorage.getItem(SAVE_KEY))); } catch(e){ storageOK = false; return blankSave(); } }
+function writeSave(){ try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); storageOK = true; } catch(e){ storageOK = false; } }
+let save = loadSave();
+writeSave();
+
+/* =========================================================
+   LANGUAGE  (English / Español, chosen in the profile)
+   ========================================================= */
+const LANG = save.profile && save.profile.lang === "es" ? "es" : "en";
+document.documentElement.lang = LANG;
+function T(en, es){ return LANG === "es" ? es : en; }
+const UI = {
+  lede: ["Study sheets and review games for each unit. Your progress saves on this device.", "Hojas de estudio y juegos de repaso para cada unidad. Tu progreso se guarda en este aparato."],
+  openUnit: ["Open a unit", "Abre una unidad"],
+  choose: ["Choose…", "Elige…"],
+  open: ["Open", "Abrir"], play: ["Play", "Jugar"],
+  playGame: ["Play a review game", "Juega un juego de repaso"],
+  hoops: ["Basketball", "Baloncesto"], derby: ["Home Run Derby", "Derby de jonrones"],
+  paint: ["Restore the Masters (painting)", "Restaura las obras maestras (pintura)"],
+  snake: ["Snake", "La serpiente"],
+  blasteroids: ["Blasteroids", "Blasteroids"],
+  zombie: ["Zombie Horde", "La horda zombi"],
+  changeMe: ["Change name, period, or language", "Cambiar nombre, período o idioma"],
+  saveCheck: ["Save check", "Prueba de guardado"],
+  cogLabel: ["Teacher settings", "Ajustes del maestro"],
+  home: ["Home", "Inicio"], contents: ["Contents", "Contenido"], next: ["Done, next topic", "Listo, siguiente tema"],
+  dragHint: ["Press and hold a topic, then drag to move it.", "Mantén presionado un tema y arrástralo para moverlo."]
+};
+function applyUI(){
+  document.querySelectorAll("[data-i18n]").forEach(el => { const v = UI[el.dataset.i18n]; if (v) el.innerHTML = v[LANG === "es" ? 1 : 0]; });
+  document.querySelectorAll("[data-i18n-label]").forEach(el => { const v = UI[el.dataset.i18nLabel]; if (v) el.setAttribute("aria-label", v[LANG === "es" ? 1 : 0]); });
+}
+function esc(s){ return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+function $(s){ return document.querySelector(s); }
+
+/* =========================================================
+   THEMES  (picked on the cog's title page screen)
+   Each one: name, colors, cover art for the bottom of the title screen
+   (viewBox 400 x 120; keep the main picture between x 110-290 and below
+   y 46 so phones and wide screens both show it), and the little things
+   floating in the sky behind the title.
+   Gradient ids start with the theme's key: the theme picker shows every
+   theme's art on the same page.
+   ========================================================= */
+const THEMES = {
+  plain: {
+    n: ["Notebook", "Cuaderno"],
+    c: { sky: "#161A22", sky2: "#1C212B", panel: "#222936", panel2: "#2A3242", line: "#39445A", ice: "#B8C7DD", amber: "#F2C14E", ink: "#1A1306" },
+    art(){
+      const edge = y => [92 - (y - 76) * 20 / 44, 308 + (y - 76) * 20 / 44];
+      let lines = "", rings = "";
+      [88, 97, 106, 115].forEach(y => { const [a, b] = edge(y); lines += `<path d="M${a + 4} ${y} Q200 ${y - 9} ${b - 4} ${y}" stroke="#9AB6D6" stroke-width="1" fill="none" opacity=".8"/>`; });
+      for (let x = 100; x <= 300; x += 20){ const y = 76 - 10 * (1 - Math.pow((x - 200) / 108, 2)); rings += `<ellipse cx="${x}" cy="${y.toFixed(1)}" rx="2.6" ry="6.5" fill="none" stroke="#B8C7DD" stroke-width="2"/>`; }
+      return `<defs><linearGradient id="plainPg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4EFE2"/><stop offset="1" stop-color="#CFC6AE"/></linearGradient>
+        <radialGradient id="plainGl" cx="50%" cy="100%" r="60%"><stop offset="0" stop-color="#F2C14E" stop-opacity=".3"/><stop offset="1" stop-color="#F2C14E" stop-opacity="0"/></radialGradient></defs>
+        <rect x="0" y="20" width="400" height="100" fill="url(#plainGl)"/>
+        <path d="M62 120 L84 70 Q200 60 316 70 L338 120Z" fill="#8E846C" opacity=".55"/>
+        <path d="M72 120 L92 76 Q200 66 308 76 L328 120Z" fill="url(#plainPg)"/>
+        ${lines}
+        <path d="M124 74 L113 120" stroke="#E8857F" stroke-width="1.4"/>
+        <path d="M132 85 q4 -4 8 0 t8 0 t8 0 t8 0 M132 94 q4 -4 8 0 t8 0 t8 0" stroke="#4A5A78" stroke-width="1.2" fill="none" opacity=".7"/>
+        ${rings}
+        <g transform="rotate(-12 250 104)"><rect x="200" y="100" width="80" height="7" rx="1" fill="#F2C14E"/><path d="M280 100 L292 103.5 L280 107Z" fill="#E9CFA0"/><path d="M288 102.3 L292 103.5 L288 104.7Z" fill="#333"/><rect x="193" y="100" width="8" height="7" rx="1" fill="#E8857F"/></g>`;
+    },
+    bg: r => dots(r, 60, ["#ffffff"], .5)
+  },
+  math: {
+    n: ["Math", "Matemáticas"],
+    c: { sky: "#0B1D2A", sky2: "#10283A", panel: "#15324A", panel2: "#1B3D59", line: "#2A5373", ice: "#7FD8F0", amber: "#FFD166", ink: "#1A1306" },
+    art(){
+      let g = "";
+      for (let i = -12; i <= 12; i++) g += `<line x1="${200 + i * 9}" y1="60" x2="${200 + i * 44}" y2="120"/>`;
+      [62, 65, 69, 74, 80, 88, 98, 110].forEach(y => { g += `<line x1="0" y1="${y}" x2="400" y2="${y}"/>`; });
+      return `<defs><linearGradient id="mathFl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0B1D2A"/><stop offset="1" stop-color="#1B4A6B"/></linearGradient>
+        <filter id="mathGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3"/></filter></defs>
+        <rect x="0" y="60" width="400" height="60" fill="url(#mathFl)"/>
+        <g stroke="#7FD8F0" stroke-width=".8" opacity=".3">${g}</g>
+        <line x1="0" y1="60" x2="400" y2="60" stroke="#7FD8F0" stroke-width="1.2" opacity=".6"/>
+        <path d="M200 120 V54 M196 58 L200 52 L204 58" stroke="#E8EEF5" stroke-width="1.2" fill="none" opacity=".5"/>
+        <path d="M118 118 Q200 6 282 118" stroke="#FFD166" stroke-width="6" fill="none" opacity=".45" filter="url(#mathGlow)"/>
+        <path d="M118 118 Q200 6 282 118" stroke="#FFD166" stroke-width="2.4" fill="none"/>
+        <circle cx="150.8" cy="82.2" r="3" fill="#7FD8F0"/><circle cx="200" cy="62" r="3" fill="#7FD8F0"/><circle cx="249.2" cy="82.2" r="3" fill="#7FD8F0"/>
+        <text x="236" y="66" font-family="Bricolage Grotesque, sans-serif" font-weight="600" font-size="11" fill="#FFD166">y = x²</text>
+        <path d="M128 104 L150 104 L139 86Z" fill="none" stroke="#7FD8F0" stroke-width="1.4" opacity=".8"/>
+        <circle cx="266" cy="100" r="9" fill="none" stroke="#7FD8F0" stroke-width="1.4" opacity=".8"/><line x1="266" y1="100" x2="275" y2="100" stroke="#7FD8F0" stroke-width="1.2" opacity=".8"/>`;
+    },
+    bg: r => glyphs(r, 24, ["π", "∑", "√", "∞", "+", "×", "÷", "=", "%", "△", "○", "x²", "½", "θ", "≤"], ["#7FD8F0", "#FFD166"])
+  },
+  science: {
+    n: ["Science", "Ciencias"],
+    c: { sky: "#140F2E", sky2: "#1B1540", panel: "#231C52", panel2: "#2C2464", line: "#3C3380", ice: "#B9A6FF", amber: "#6EF2A8", ink: "#0B2417" },
+    art(){
+      return `<defs><radialGradient id="sciGl" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#B9A6FF" stop-opacity=".35"/><stop offset="1" stop-color="#B9A6FF" stop-opacity="0"/></radialGradient>
+        <filter id="sciBlur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter></defs>
+        <circle cx="200" cy="82" r="62" fill="url(#sciGl)"/>
+        <g fill="none" stroke="#B9A6FF" stroke-width="1.6" opacity=".85">
+          <ellipse cx="200" cy="80" rx="40" ry="12"/><circle cx="240" cy="80" r="2.6" fill="#fff" stroke="none"/>
+          <g transform="rotate(60 200 80)"><ellipse cx="200" cy="80" rx="40" ry="12"/><circle cx="160" cy="80" r="2.6" fill="#fff" stroke="none"/></g>
+          <g transform="rotate(-60 200 80)"><ellipse cx="200" cy="80" rx="40" ry="12"/><circle cx="240" cy="80" r="2.6" fill="#fff" stroke="none"/></g>
+        </g>
+        <circle cx="200" cy="80" r="9" fill="#6EF2A8" opacity=".6" filter="url(#sciBlur)"/><circle cx="200" cy="80" r="5.5" fill="#6EF2A8"/>
+        <rect x="0" y="114" width="400" height="6" fill="#2C2464"/>
+        <path d="M123 82 H137 V94 L154 114 H106 L123 94Z" fill="rgba(255,255,255,.08)" stroke="#CFC3FF" stroke-width="1.4"/>
+        <path d="M113 104 H147 L154 114 H106Z" fill="#6EF2A8" opacity=".85"/>
+        <path d="M120 82 H140" stroke="#CFC3FF" stroke-width="2"/>
+        <g fill="none" stroke="#6EF2A8" stroke-width="1"><circle cx="129" cy="74" r="2"/><circle cx="134" cy="66" r="1.6"/><circle cx="127" cy="58" r="1.2"/></g>
+        <path d="M252 85 L256 88 V114 H290 V88" fill="rgba(255,255,255,.08)" stroke="#CFC3FF" stroke-width="1.4"/>
+        <rect x="256.7" y="100" width="32.6" height="13.3" fill="#FF7EB6" opacity=".8"/>
+        <path d="M290 94 h-6 M290 100 h-8 M290 106 h-6" stroke="#CFC3FF" stroke-width="1"/>
+        <rect x="300" y="86" width="8" height="28" rx="4" fill="rgba(255,255,255,.08)" stroke="#CFC3FF" stroke-width="1.2"/><rect x="300.6" y="100" width="6.8" height="13.4" rx="3.4" fill="#FFD166"/>
+        <rect x="314" y="90" width="8" height="24" rx="4" fill="rgba(255,255,255,.08)" stroke="#CFC3FF" stroke-width="1.2"/><rect x="314.6" y="102" width="6.8" height="11.4" rx="3.4" fill="#7FD8F0"/>
+        <rect x="86" y="90" width="8" height="24" rx="4" fill="rgba(255,255,255,.08)" stroke="#CFC3FF" stroke-width="1.2"/><rect x="86.6" y="98" width="6.8" height="15.4" rx="3.4" fill="#B9A6FF"/>`;
+    },
+    bg: r => bubbles(r, 26, ["#B9A6FF", "#6EF2A8"])
+  },
+  history: {
+    n: ["History", "Historia"],
+    c: { sky: "#1E140D", sky2: "#281B12", panel: "#33231A", panel2: "#3E2B20", line: "#574031", ice: "#E9C79A", amber: "#E59A4C", ink: "#1E1006" },
+    art(){
+      let cols = "";
+      for (let i = 0; i < 7; i++){ const x = 157 + i * 14; cols += `<rect x="${x}" y="80" width="8" height="26"/><rect x="${x - 1.5}" y="78" width="11" height="3"/>`; }
+      return `<defs><radialGradient id="historySun" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#E59A4C" stop-opacity=".55"/><stop offset="1" stop-color="#E59A4C" stop-opacity="0"/></radialGradient></defs>
+        <circle cx="200" cy="102" r="78" fill="url(#historySun)"/>
+        <circle cx="200" cy="98" r="22" fill="#E59A4C" opacity=".45"/>
+        <path d="M40 118 L64 92 L88 118Z" fill="#3A2618"/><path d="M64 92 L88 118 H72Z" fill="#2A1A10"/>
+        <path d="M70 118 L112 72 L154 118Z" fill="#3A2618"/><path d="M112 72 L154 118 H124Z" fill="#2A1A10"/>
+        <g fill="#2A1A10">
+          <path d="M150 70 L200 50 L250 70Z"/><rect x="152" y="70" width="96" height="8"/>${cols}
+          <rect x="148" y="106" width="104" height="5"/><rect x="142" y="111" width="116" height="7"/>
+          <rect x="262" y="80" width="34" height="38"/><rect x="262" y="74" width="6" height="6"/><rect x="276" y="74" width="6" height="6"/><rect x="290" y="74" width="6" height="6"/>
+        </g>
+        <path d="M150 70 L200 50 L250 70 M152 78 H248" stroke="#E9C79A" stroke-width=".8" fill="none" opacity=".45"/>
+        <path d="M274 118 V106 a5 5 0 0 1 10 0 V118Z" fill="#E59A4C" opacity=".35"/>
+        <path d="M279 74 V58" stroke="#2A1A10" stroke-width="1.5"/><path d="M279 58 L291 62 L279 66Z" fill="#E59A4C"/>
+        <rect x="0" y="117" width="400" height="3" fill="#120B06"/>`;
+    },
+    bg: r => dots(r, 50, ["#E9C79A", "#E59A4C"], .45)
+  },
+  english: {
+    n: ["English", "Inglés"],
+    c: { sky: "#1C1024", sky2: "#251530", panel: "#2F1C3D", panel2: "#3A244B", line: "#523568", ice: "#F0B8D0", amber: "#F7C873", ink: "#1E1206" },
+    art(){
+      let lines = "";
+      for (let i = 0; i < 4; i++){
+        const d = i * 6;
+        lines += `<path d="M118 ${86 + d} C142 ${80 + d} 170 ${81 + d} 192 ${90 + d}"/><path d="M282 ${86 + d} C258 ${80 + d} 230 ${81 + d} 208 ${90 + d}"/>`;
+      }
+      const bird = (x, y, s) => `<path d="M${x} ${y} q${4 * s} ${-4 * s} ${8 * s} 0 q${4 * s} ${-4 * s} ${8 * s} 0" />`;
+      return `<defs><linearGradient id="englishPg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6EBD7"/><stop offset="1" stop-color="#D8C7A8"/></linearGradient>
+        <radialGradient id="englishGl" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#F7C873" stop-opacity=".4"/><stop offset="1" stop-color="#F7C873" stop-opacity="0"/></radialGradient></defs>
+        <ellipse cx="200" cy="96" rx="130" ry="46" fill="url(#englishGl)"/>
+        <path d="M200 120 C168 110 136 110 98 116 L104 80 C140 72 172 74 200 86 C228 74 260 72 296 80 L302 116 C264 110 232 110 200 120Z" fill="#523568"/>
+        <path d="M200 116 C170 106 140 106 106 112 L112 78 C144 70 174 72 200 84Z" fill="url(#englishPg)"/>
+        <path d="M200 116 C230 106 260 106 294 112 L288 78 C256 70 226 72 200 84Z" fill="url(#englishPg)"/>
+        <g stroke="#B49A7A" stroke-width="1" fill="none" opacity=".65">${lines}</g>
+        <path d="M200 84 V116" stroke="#B49A7A" stroke-width="1.2"/>
+        <path d="M206 82 C216 64 236 58 252 60 C244 70 228 76 206 82Z" fill="#F6EBD7" opacity=".9"/>
+        <g stroke="#F0B8D0" stroke-width="1.6" fill="none" stroke-linecap="round">${bird(238, 54, .9)}${bird(262, 64, .7)}${bird(146, 60, .8)}${bird(168, 50, .6)}</g>
+        <g font-family="Bricolage Grotesque, serif" font-weight="600" fill="#F7C873" opacity=".85"><text x="224" y="72" font-size="12">A</text><text x="138" y="70" font-size="11">b</text><text x="274" y="74" font-size="11">?</text><text x="182" y="62" font-size="13">“</text></g>`;
+    },
+    bg: r => glyphs(r, 22, ["A", "a", "B", "“", "”", "?", "!", "&", "¶", "Q", "e", "R", "z"], ["#F0B8D0", "#F7C873"])
+  },
+  geography: {
+    n: ["Social Studies / Geography", "Estudios sociales / Geografía"],
+    c: { sky: "#0B1E26", sky2: "#0F2A35", panel: "#143644", panel2: "#1A4254", line: "#275A70", ice: "#8FE0D0", amber: "#F4B860", ink: "#1A1306" },
+    art(){
+      const pin = (x, y) => `<path d="M${x} ${y} c-4 -6 -6 -8 -6 -11 a6 6 0 1 1 12 0 c0 3 -2 5 -6 11Z" fill="#F4B860"/><circle cx="${x}" cy="${y - 11}" r="2.2" fill="#0B1E26"/>`;
+      return `<defs><clipPath id="geographyClip"><circle cx="200" cy="140" r="82"/></clipPath>
+        <radialGradient id="geographyOc" cx="50%" cy="20%" r="70%"><stop offset="0" stop-color="#2F9FB0"/><stop offset="1" stop-color="#0F4A5C"/></radialGradient>
+        <filter id="geographyGlow" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="3"/></filter></defs>
+        <circle cx="200" cy="140" r="84" fill="none" stroke="#8FE0D0" stroke-width="6" opacity=".4" filter="url(#geographyGlow)"/>
+        <circle cx="200" cy="140" r="82" fill="url(#geographyOc)"/>
+        <g clip-path="url(#geographyClip)">
+          <path d="M150 80 C170 70 196 74 204 88 C210 100 192 108 176 104 C160 100 146 94 150 80Z" fill="#4FA36B" opacity=".9"/>
+          <path d="M222 70 C240 66 262 76 266 92 C256 98 240 94 230 86 C222 80 218 74 222 70Z" fill="#4FA36B" opacity=".9"/>
+          <path d="M186 124 C200 112 224 114 232 124Z" fill="#4FA36B" opacity=".9"/>
+          <g stroke="#8FE0D0" stroke-width=".9" fill="none" opacity=".4"><path d="M100 78 H300 M100 96 H300 M100 114 H300 M200 50 V130"/><ellipse cx="200" cy="140" rx="30" ry="82"/><ellipse cx="200" cy="140" rx="58" ry="82"/></g>
+        </g>
+        <circle cx="200" cy="140" r="82" fill="none" stroke="#CFF6EE" stroke-width="1.2" opacity=".8"/>
+        <ellipse cx="200" cy="96" rx="118" ry="22" fill="none" stroke="#F4B860" stroke-width="1.2" stroke-dasharray="3 4" opacity=".7"/>
+        ${pin(176, 90)}${pin(242, 82)}
+        <g transform="translate(276 64)" opacity=".85"><path d="M0 -10 L2.5 -2.5 L10 0 L2.5 2.5 L0 10 L-2.5 2.5 L-10 0 L-2.5 -2.5Z" fill="#8FE0D0"/><circle r="1.6" fill="#0B1E26"/></g>`;
+    },
+    bg: r => dots(r, 70, ["#ffffff", "#8FE0D0"], .55)
+  },
+  languages: {
+    n: ["World Languages", "Idiomas"],
+    c: { sky: "#0F1F1E", sky2: "#132A28", panel: "#193634", panel2: "#1F4240", line: "#2D5A57", ice: "#9FE6C8", amber: "#FF9F6B", ink: "#2A1206" },
+    art(){
+      const b = (x, y, w, h, fill, text, left) => {
+        const tx = left ? x - w / 2 + 10 : x + w / 2 - 10, dir = left ? -1 : 1;
+        return `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="${h / 2}" fill="${fill}"/>` +
+          `<path d="M${tx - 4 * dir} ${y + h / 2 - 1} L${tx + 4 * dir} ${y + h / 2 + 7} L${tx + 5 * dir} ${y + h / 2 - 1}Z" fill="${fill}"/>` +
+          `<text x="${x}" y="${y + h * .18}" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="600" font-size="${h * .5}" fill="#10201F">${text}</text>`;
+      };
+      return `<path d="M0 120 V100 C60 88 120 96 200 102 C280 108 340 92 400 98 V120Z" fill="#193634"/>
+        <path d="M0 120 V110 C100 100 200 112 300 106 C340 104 380 108 400 110 V120Z" fill="#0B1716"/>
+        ${b(96, 76, 48, 20, "#F0B8D0", "Hallo", false)}${b(306, 76, 48, 20, "#A8C0FF", "Merci", true)}
+        ${b(152, 58, 42, 20, "#B9A6FF", "你好", false)}${b(250, 58, 40, 20, "#7FD8F0", "Olá", true)}
+        ${b(138, 92, 68, 22, "#9FE6C8", "Bonjour", false)}${b(264, 90, 52, 22, "#F7C873", "Ciao", true)}
+        ${b(200, 74, 66, 28, "#FF9F6B", "¡Hola!", false)}`;
+    },
+    bg: r => glyphs(r, 18, ["¡Hola!", "Merci", "Danke", "Grazie", "Obrigado", "Gracias", "Salut", "Ciao", "こんにちは", "안녕", "?", "¿"], ["#9FE6C8", "#FF9F6B"], 12, 18)
+  },
+  art: {
+    n: ["Art", "Arte"],
+    c: { sky: "#1A1718", sky2: "#231F21", panel: "#2D282A", panel2: "#383134", line: "#4A4246", ice: "#F5B5A0", amber: "#FFD23F", ink: "#1E1806" },
+    art(){
+      return `<g fill="none" stroke-linecap="round">
+          <path d="M40 112 C120 62 180 120 260 72 S360 82 400 62" stroke="#FF5D73" stroke-width="10" opacity=".35"/>
+          <path d="M0 92 C90 122 160 62 240 98 S340 118 400 92" stroke="#3DA5FF" stroke-width="9" opacity=".3"/>
+          <path d="M60 70 C140 96 220 56 300 84" stroke="#FFD23F" stroke-width="7" opacity=".3"/>
+        </g>
+        <path d="M200 70 C238 70 262 86 262 100 C262 112 248 116 236 112 C226 109 220 114 222 120 L160 120 C146 114 138 104 140 94 C144 78 168 70 200 70Z" fill="#E9D2B0"/>
+        <ellipse cx="236" cy="102" rx="7" ry="5" fill="#1A1718"/>
+        <circle cx="160" cy="96" r="6" fill="#FF5D73"/><circle cx="176" cy="84" r="6" fill="#FFD23F"/><circle cx="196" cy="79" r="6" fill="#3DA5FF"/>
+        <circle cx="216" cy="81" r="6" fill="#4CD38A"/><circle cx="234" cy="88" r="5.5" fill="#B26BFF"/><circle cx="170" cy="108" r="5" fill="#FFFFFF"/>
+        <g transform="rotate(-35 250 80)"><rect x="236" y="77.5" width="58" height="5" rx="2" fill="#8B5A2B"/><rect x="226" y="77" width="11" height="6" fill="#C9CED6"/><path d="M226 77.4 C218 77.4 212 80 208 80 C212 80 218 82.6 226 82.6Z" fill="#FF5D73"/></g>`;
+    },
+    bg: r => dots(r, 46, ["#FF5D73", "#FFD23F", "#3DA5FF", "#4CD38A", "#B26BFF"], .5, 2, 6)
+  },
+  music: {
+    n: ["Music", "Música"],
+    c: { sky: "#0E1328", sky2: "#131A36", panel: "#1A2246", panel2: "#212B55", line: "#2F3B70", ice: "#A8C0FF", amber: "#FF7EB6", ink: "#2A0716" },
+    art(){
+      const wave = x => { const t = x / 400; return -14 * 3 * t * (1 - t) * (1 - t) + 14 * 3 * t * t * (1 - t); };
+      let staff = "", notes = "";
+      for (let i = 0; i < 5; i++){ const y = 74 + i * 7; staff += `<path d="M0 ${y} C100 ${y - 14} 300 ${y + 14} 400 ${y}"/>`; }
+      const ys = [];
+      [[118, 2], [142, 5], [166, 3], [190, 7], [214, 6], [238, 4], [262, 8], [286, 5]].forEach(([x, s], i) => {
+        const y = 102 - s * 3.5 + wave(x); ys.push([x, y]);
+        notes += `<ellipse cx="${x}" cy="${y.toFixed(1)}" rx="4.4" ry="3.1" transform="rotate(-20 ${x} ${y.toFixed(1)})"/><rect x="${x + 3.2}" y="${(y - 21).toFixed(1)}" width="1.5" height="21"/>`;
+      });
+      // a beam joins the 5th and 6th notes
+      const [a, b] = [ys[4], ys[5]];
+      notes += `<path d="M${a[0] + 3.2} ${(a[1] - 21).toFixed(1)} L${b[0] + 4.7} ${(b[1] - 21).toFixed(1)} L${b[0] + 4.7} ${(b[1] - 17).toFixed(1)} L${a[0] + 3.2} ${(a[1] - 17).toFixed(1)}Z"/>`;
+      return `<defs><radialGradient id="musicGl" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#FF7EB6" stop-opacity=".3"/><stop offset="1" stop-color="#FF7EB6" stop-opacity="0"/></radialGradient></defs>
+        <ellipse cx="200" cy="90" rx="150" ry="40" fill="url(#musicGl)"/>
+        <g stroke="#A8C0FF" stroke-width="1.2" fill="none" opacity=".6">${staff}</g>
+        <g fill="#FF7EB6">${notes}</g>`;
+    },
+    bg: r => glyphs(r, 22, ["♪", "♫", "♩", "♬", "♭", "♯"], ["#A8C0FF", "#FF7EB6"])
+  },
+  health: {
+    n: ["Health / PE", "Salud / Educación física"],
+    c: { sky: "#0E1D14", sky2: "#13281B", panel: "#193323", panel2: "#1F3F2B", line: "#2C553C", ice: "#A6E8A0", amber: "#FF8A5B", ink: "#2A1006" },
+    art(){
+      return `<defs><filter id="healthGlow" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter></defs>
+        <ellipse cx="200" cy="160" rx="232" ry="78" fill="#B4543A"/>
+        <g fill="none" stroke="#fff" stroke-width=".9" opacity=".55"><ellipse cx="200" cy="160" rx="186" ry="60"/><ellipse cx="200" cy="160" rx="201" ry="66"/><ellipse cx="200" cy="160" rx="216" ry="72"/></g>
+        <ellipse cx="200" cy="160" rx="170" ry="52" fill="#1F6B3A"/>
+        <path d="M0 64 H140 L150 64 L158 46 L168 84 L178 54 L186 68 L192 64 H400" stroke="#FF8A5B" stroke-width="6" fill="none" opacity=".5" filter="url(#healthGlow)"/>
+        <path d="M0 64 H140 L150 64 L158 46 L168 84 L178 54 L186 68 L192 64 H400" stroke="#FF8A5B" stroke-width="2.4" fill="none" stroke-linejoin="round"/>
+        <circle cx="252" cy="100" r="10" fill="#F08A3C" stroke="#2A1A10" stroke-width="1"/>
+        <path d="M242 100 H262 M252 90 V110 M245 93 C249 97 249 103 245 107 M259 93 C255 97 255 103 259 107" stroke="#2A1A10" stroke-width="1" fill="none"/>
+        <g fill="#C9CED6"><rect x="134" y="99" width="30" height="3"/><rect x="130" y="93" width="5" height="15" rx="1"/><rect x="163" y="93" width="5" height="15" rx="1"/><rect x="126" y="95" width="4" height="11" rx="1"/><rect x="168" y="95" width="4" height="11" rx="1"/></g>`;
+    },
+    bg: r => dots(r, 50, ["#A6E8A0", "#ffffff"], .45)
+  },
+  cs: {
+    n: ["Computer Science", "Informática"],
+    c: { sky: "#070F0C", sky2: "#0C1813", panel: "#11221A", panel2: "#172C22", line: "#224033", ice: "#7CFFB2", amber: "#3DDC97", ink: "#04170D" },
+    art(){
+      let pins = "";
+      for (let x = 178; x <= 222; x += 8) pins += `<path d="M${x} 72 V66 M${x} 110 V116"/>`;
+      for (let y = 78; y <= 104; y += 8) pins += `<path d="M172 ${y} H166 M228 ${y} H234"/>`;
+      const traces = [["M166 78 H140 V62 H112", 112, 62], ["M166 94 H130 V108 H96", 96, 108], ["M234 78 H262 V60 H296", 296, 60], ["M234 94 H272 V106 H310", 310, 106], ["M186 66 V54 H158", 158, 54], ["M214 66 V52 H244", 244, 52], ["M166 102 H150 V118", 150, 118], ["M234 102 H248 V118", 248, 118]];
+      return `<defs><radialGradient id="csGl" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#3DDC97" stop-opacity=".35"/><stop offset="1" stop-color="#3DDC97" stop-opacity="0"/></radialGradient></defs>
+        <ellipse cx="200" cy="90" rx="130" ry="42" fill="url(#csGl)"/>
+        <g stroke="#3DDC97" stroke-width="1.4" fill="none" opacity=".75">${traces.map(t => `<path d="${t[0]}"/>`).join("")}</g>
+        <g fill="#7CFFB2">${traces.map(t => `<circle cx="${t[1]}" cy="${t[2]}" r="2.6"/>`).join("")}</g>
+        <g stroke="#7CFFB2" stroke-width="1.6">${pins}</g>
+        <rect x="172" y="72" width="56" height="38" rx="4" fill="#11221A" stroke="#7CFFB2" stroke-width="1.4"/>
+        <text x="200" y="96" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-weight="700" font-size="14" fill="#7CFFB2">&lt;/&gt;</text>`;
+    },
+    bg: r => glyphs(r, 30, ["0", "1", "0", "1", "{ }", "</>", "01"], ["#7CFFB2", "#3DDC97"], 11, 18)
+  }
+};
+const THEME_ORDER = ["plain", "math", "science", "history", "english", "geography", "languages", "art", "music", "health", "cs"];
+
+/* sky decorations: twinkling dots, floating symbols, rising bubbles */
+function dots(r, n, colors, maxOp, minS = 1.5, maxS = 2.5){
+  let h = "";
+  for (let i = 0; i < n; i++){
+    const s = r() < .85 ? minS : maxS;
+    h += `<span class="star${r() < .25 ? " tw" : ""}" style="left:${r() * 100}%;top:${r() * 72}%;width:${s}px;height:${s}px;opacity:${.25 + r() * maxOp};background:${colors[Math.floor(r() * colors.length)]};animation-delay:${r() * 4}s"></span>`;
+  }
+  return h;
+}
+function glyphs(r, n, set, colors, minS = 14, maxS = 30){
+  let h = "";
+  for (let i = 0; i < n; i++){
+    h += `<span class="bit fl" style="left:${r() * 94}%;top:${r() * 66}%;font-size:${minS + r() * (maxS - minS)}px;opacity:${.08 + r() * .14};color:${colors[Math.floor(r() * colors.length)]};animation-delay:${-r() * 8}s;animation-duration:${6 + r() * 6}s">${esc(set[Math.floor(r() * set.length)])}</span>`;
+  }
+  return h;
+}
+function bubbles(r, n, colors){
+  let h = "";
+  for (let i = 0; i < n; i++){
+    const s = 4 + r() * 12, c = colors[Math.floor(r() * colors.length)];
+    h += `<span class="star fl bit" style="left:${r() * 96}%;top:${r() * 70}%;width:${s}px;height:${s}px;background:none;border:1.5px solid ${c};opacity:${.15 + r() * .3};animation-delay:${-r() * 8}s;animation-duration:${6 + r() * 6}s"></span>`;
+  }
+  return h;
+}
+function rgba(hex, a){ const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
+function themeOf(key){ return THEMES[key] || THEMES.plain; }
+function applyTheme(key){
+  const th = themeOf(key), c = th.c, st = document.documentElement.style;
+  ["sky", "sky2", "panel", "panel2", "line", "ice", "amber", "ink"].forEach(k => st.setProperty("--" + k, c[k]));
+  st.setProperty("--amberSoft", rgba(c.amber, .1)); st.setProperty("--amberMark", rgba(c.amber, .28));
+  st.setProperty("--iceSoft", rgba(c.ice, .12)); st.setProperty("--glass", rgba(c.panel, .82));
+  document.querySelector('meta[name="theme-color"]').setAttribute("content", c.sky);
+  $("#art").innerHTML = th.art();
+  let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  $("#stars").innerHTML = th.bg(rnd);
+}
+function themeSvg(key, extra = ""){ return `<svg viewBox="0 0 400 120" preserveAspectRatio="xMidYMax slice" aria-hidden="true" style="background:${themeOf(key).c.sky}"${extra}>${themeOf(key).art()}</svg>`; }
+
+/* =========================================================
+   CHEAT SHEETS
+   The AI writes each topic's cheat sheet in this plain-text format
+   (cheatPrompt below asks for it):
+     Title: The water cycle
+     Summary: one sentence for the contents list
+     # Section title
+     - A key fact with the **important words** in double stars
+     Vocab: Term: a short definition          -> vocabulary cards
+     Remember: a must-know idea                -> boxed callout
+     Formula: A = l × w                        -> formula box
+     Example: a worked problem                 -> example box...
+     Step: one step of it                      -> ...with numbered steps
+   Spanish labels (Título, Resumen, Vocabulario, Recuerda, Fórmula,
+   Ejemplo, Paso) work too.
+   ========================================================= */
+const LABELS = [
+  ["title", /^(?:title|t[ií]tulo)$/i], ["sum", /^(?:summary|resumen)$/i],
+  ["vocab", /^(?:vocab|vocabulary|vocabulario|term|t[eé]rmino|key term|word)$/i],
+  ["rem", /^(?:remember|recuerda|recuerde|key idea|idea clave|important|importante|must know)$/i],
+  ["formula", /^(?:formula|f[oó]rmula|rule|regla|equation|ecuaci[oó]n)$/i],
+  ["ex", /^(?:example|ejemplo|worked example)$/i], ["step", /^(?:step|paso)\s*\d*$/i]
+];
+function parseSheet(text){
+  const out = { title: "", sum: "", blocks: [] };
+  String(text || "").replace(/\r/g, "").split("\n").forEach(raw => {
+    let ln = raw.trim();
+    if (!ln || /^(```|~~~)/.test(ln) || /^[-*_]{3,}$/.test(ln)) return;
+    if (/^#+\s*/.test(ln)){ const h = ln.replace(/^#+\s*/, "").replace(/\*\*/g, "").trim(); if (h) out.blocks.push({ k: "h", t: h }); return; }
+    // "- **Vocab:** ..." or "**Vocab**: ..." -> "Vocab: ..."
+    let bare = ln.replace(/^(?:[-*•]|\d+[.)])\s+(?=\**[A-Za-zÁÉÍÓÚáéíóúñ ]+\d*\**\s*:)/, "").replace(/^\*\*([^*:]+?)\s*:\s*\*\*\s*/, "$1: ").replace(/^\*\*([^*:]+?)\*\*\s*:\s*/, "$1: ");
+    const m = bare.match(/^([A-Za-zÁÉÍÓÚáéíóúñ ]{2,20}?\d*)\s*:\s*(.*)$/);
+    const lab = m && LABELS.find(l => l[1].test(m[1].trim()));
+    if (lab){
+      const k = lab[0], rest = m[2].trim();
+      if (!rest) return;
+      if (k === "title"){ if (!out.title) out.title = rest.replace(/\*\*/g, ""); return; }
+      if (k === "sum"){ if (!out.sum) out.sum = rest.replace(/\*\*/g, ""); return; }
+      if (k === "vocab"){
+        const v = rest.replace(/^\*\*([^*]+)\*\*/, "$1").match(/^(.+?)\s*(?::|\s[-–—=]\s)\s*(.+)$/);
+        out.blocks.push(v ? { k, term: v[1].replace(/\*\*/g, "").trim(), t: v[2] } : { k, term: rest.replace(/\*\*/g, ""), t: "" });
+        return;
+      }
+      out.blocks.push({ k, t: rest }); return;
+    }
+    let b;
+    if ((b = ln.match(/^(?:[-*•]|\d+[.)])\s+(.*)$/))) out.blocks.push({ k: "li", t: b[1] });
+    else if ((b = ln.match(/^>\s*(.*)$/))) out.blocks.push({ k: "rem", t: b[1] });
+    else out.blocks.push({ k: "p", t: ln });
+  });
+  return out;
+}
+/* **highlight** -> <mark>, x^2 -> superscript */
+function inl(t){
+  return esc(t).split(/\*\*(.+?)\*\*/).map((s, i) => i % 2 ? `<mark>${s.replace(/\*/g, "")}</mark>` : s.replace(/\*\*/g, ""))
+    .join("").replace(/\^(\d+|[a-zA-Z])(?![\w])/g, "<sup>$1</sup>");
+}
+function sheetHtml(text, lang){
+  const t2 = (en, es) => (lang || LANG) === "es" ? es : en;
+  const bl = parseSheet(text).blocks;
+  let h = "", open = "";
+  const close = () => { if (open) h += open === "ul" ? "</ul>" : open === "defs" ? "</div>" : "</ol></div>"; open = ""; };
+  bl.forEach(b => {
+    if (b.k === "li"){ if (open !== "ul"){ close(); h += `<ul class="facts">`; open = "ul"; } h += `<li>${inl(b.t)}</li>`; return; }
+    if (b.k === "vocab"){ if (open !== "defs"){ close(); h += `<div class="defs">`; open = "defs"; } h += `<div class="def"><b>${inl(b.term)}</b>${b.t ? ": " + inl(b.t) : ""}</div>`; return; }
+    if (b.k === "step"){
+      if (open !== "ex"){ close(); h += `<div class="example"><span class="flabel">${t2("Steps", "Pasos")}</span><ol>`; open = "ex"; }
+      h += `<li>${inl(b.t)}</li>`; return;
+    }
+    close();
+    if (b.k === "h") h += `<h3>${inl(b.t)}</h3>`;
+    else if (b.k === "rem") h += `<div class="callout"><p><strong>${t2("Remember:", "Recuerda:")}</strong> ${inl(b.t)}</p></div>`;
+    else if (b.k === "formula") h += `<div class="formula"><span class="flabel">${t2("Formula", "Fórmula")}</span><div class="ftext">${inl(b.t)}</div></div>`;
+    else if (b.k === "ex"){ h += `<div class="example"><span class="flabel">${t2("Example", "Ejemplo")}</span><p>${inl(b.t)}</p><ol>`; open = "ex"; }
+    else h += `<p>${inl(b.t)}</p>`;
+  });
+  close();
+  return h;
+}
+/* a cheat sheet as plain notes, for the review question prompt */
+function sheetPlain(text){
+  const s = parseSheet(text), lab = { rem: "Remember: ", formula: "Formula: ", ex: "Example: ", step: "  Step: " };
+  return s.blocks.map(b => {
+    const t = b.t.replace(/\*\*/g, "");
+    return b.k === "h" ? "## " + t : b.k === "vocab" ? b.term + ": " + t : b.k === "li" ? "- " + t : (lab[b.k] || "") + t;
+  }).join("\n");
+}
+function sheetStats(text){
+  const s = parseSheet(text), n = k => s.blocks.filter(b => b.k === k).length;
+  return { s, sections: n("h"), vocab: n("vocab"), rem: n("rem"), formula: n("formula"), ex: n("ex"), lines: s.blocks.length, marked: /\*\*[^*]+\*\*/.test(text) };
+}
+
+/* the AI prompt that writes a cheat sheet */
+function cheatPrompt(o){
+  const len = { short: "3 to 4 sections", std: "4 to 6 sections", long: "6 to 8 sections" }[o.len] || "4 to 6 sections";
+  const fmt = [
+    `Title: ${o.title || "The topic's title"}`,
+    "Summary: One short sentence that tells students what this topic is about.",
+    "# A short section title",
+    "- One key fact per line, with the most important words wrapped in **double stars**"
+  ];
+  if (o.vocab) fmt.push("Vocab: Term: A short, student-friendly definition");
+  if (o.rem) fmt.push("Remember: The one idea from this section students must not forget");
+  if (o.formula) fmt.push("Formula: A formula or rule in plain text, then what each letter means", "Example: A short example problem", "Step: One step of the solution per line, ending with the answer");
+  const rules = [
+    `Use ${len}, each with 2 to 6 lines.`,
+    "In EVERY line that starts with -, wrap 1 to 3 key words in **double stars**, for example:\n  - **Evaporation** turns liquid water into **water vapor**.",
+    o.vocab && "Put the important vocabulary words on Vocab lines (Vocab: Term: definition), in the section where they belong. Leave out vocabulary a student at this level already knows.",
+    o.rem && "Give each section at most one Remember line. Use Remember lines for the ideas most likely to be on a test and the mistakes students make most.",
+    o.formula && "Use Formula lines for formulas, rules, and equations. Use an Example line followed by Step lines for each worked example. Write math in plain text (x^2, sqrt(x), ×, ÷, ≤): no LaTeX.",
+    `Write for ${o.grade || "high school"} students: short, clear sentences that fit on a phone screen.`,
+    "Start every line with one of the labels shown in the format (Title:, Summary:, #, -" + (o.vocab ? ", Vocab:" : "") + (o.rem ? ", Remember:" : "") + (o.formula ? ", Formula:, Example:, Step:" : "") + ").",
+    "Plain text only: no tables, no emojis, no other markdown, and nothing before or after the cheat sheet. Put the whole cheat sheet in one code block so it is easy to copy."
+  ].filter(Boolean);
+  return `Make a study cheat sheet for students.
+
+Topic: ${o.title || "(write the topic here)"}
+${o.course ? `Class: ${o.course}\n` : ""}Grade level: ${o.grade || "high school"}
+${o.notes ? `\nBase the cheat sheet on this material (keep its facts and vocabulary, leave out anything off topic):\n"""\n${o.notes}\n"""\n` : "\nCover the key ideas, vocabulary, and facts a student needs to know about this topic.\n"}
+Use exactly this format:
+${fmt.join("\n")}
+
+Rules:
+${rules.map(r => "- " + r).join("\n")}`;
+}
+function esSheetPrompt(text){
+  return `Translate this study cheat sheet into Spanish for students.
+
+Keep exactly the same lines and format:
+- Keep these labels in English, exactly as written, at the start of their lines: Title:, Summary:, Vocab:, Remember:, Formula:, Example:, Step:
+- Translate everything after the labels. In Vocab lines keep the colon between the term and its definition.
+- Keep # at the start of section titles and - at the start of fact lines.
+- Wrap the same key words in **double stars** in Spanish.
+- Don't change the math.
+- Put the whole answer in one code block, with nothing before or after it.
+
+${text}`;
+}
+/* turn a formatted paste (from an AI chat or a document) into cheat sheet text: headings become #, bold becomes **highlight** */
+function htmlToSheet(html){
+  const doc = new DOMParser().parseFromString(html, "text/html"), out = [];
+  const bold = n => { const fw = ((n.getAttribute("style") || "").match(/font-weight:\s*([a-z0-9]+)/i) || [])[1]; return fw ? /bold|[6-9]00/i.test(fw) : /^(B|STRONG|MARK)$/.test(n.tagName); };
+  const tidy = t => t.replace(/\s+/g, " ").replace(/\s+([.,;:!?)])/g, "$1").trim();
+  const inline = node => {
+    let t = "";
+    node.childNodes.forEach(n => {
+      if (n.nodeType === 3) t += n.nodeValue;
+      else if (n.nodeType === 1){
+        if (n.tagName === "BR") t += " ";
+        else if (/^(UL|OL)$/.test(n.tagName)) return;
+        else if (bold(n)){ const x = inline(n).replace(/\*\*/g, "").trim(); if (x) t += " **" + x + "** "; }
+        else t += inline(n);
+      }
+    });
+    return t;
+  };
+  const block = node => node.childNodes.forEach(n => {
+    const tag = n.tagName; let x;
+    if (n.nodeType === 3){ if (tidy(n.nodeValue)) out.push(tidy(n.nodeValue)); return; }
+    if (n.nodeType !== 1 || /^(SCRIPT|STYLE|META)$/.test(tag)) return;
+    if (tag === "PRE"){ out.push(n.textContent); return; }
+    if (/^H[1-6]$/.test(tag)) out.push("# " + tidy(inline(n).replace(/\*\*/g, "")));
+    else if (tag === "LI"){ out.push("- " + tidy(inline(n))); n.childNodes.forEach(c => { if (/^(UL|OL)$/.test(c.tagName || "")) block(c); }); }
+    else if (/^(UL|OL|DIV|SECTION|ARTICLE|MAIN|BLOCKQUOTE|BODY|SPAN)$/.test(tag) || (tag === "B" && !bold(n))) block(n);
+    else if ((x = tidy(inline(n)))){ const m = x.match(/^\*\*([^*]+)\*\*:?$/); out.push(m ? "# " + m[1] : x); }
+  });
+  block(doc.body);
+  return out.join("\n");
+}
+/* pasting from an AI chat's page (not its copy button) brings formatting: keep the highlights */
+function smartPaste(box, after){
+  box.addEventListener("paste", e => {
+    const cd = e.clipboardData; if (!cd) return;
+    const plain = cd.getData("text/plain"), html = cd.getData("text/html");
+    if (!html || /\*\*|^\s*#/m.test(plain) || !/<(b|strong|h[1-6]|li)\b/i.test(html)) return;
+    e.preventDefault();
+    const t = htmlToSheet(html), s = box.selectionStart, en = box.selectionEnd;
+    box.value = box.value.slice(0, s) + t + box.value.slice(en);
+    box.selectionStart = box.selectionEnd = s + t.length;
+    after && after();
+  });
+}
+
+/* =========================================================
+   THE COURSE  (made in the cog; a class link carries a copy)
+   { title, teacher, theme, grade, units: [{ id, name, tp: [topic ids] }],
+     topics: { id: { title, sum, sheet, es: { title, sum, sheet } } },
+     q: [review questions], pref: { cheat sheet prompt choices } }
+   Topic and unit ids are permanent save keys for students' progress.
+   ========================================================= */
+function blankCourse(){ return { v: 1, title: "", teacher: "", theme: "plain", grade: "", units: [], topics: {}, q: [], pref: {} }; }
+const str = (x, n) => typeof x === "string" ? x.slice(0, n) : "";
+const okC = c => Array.isArray(c) && c.length >= 2 && c.every(x => typeof x === "string");
+function checkQ(list, topics){
+  return (Array.isArray(list) ? list : []).filter(x => x && topics[x.tp] && typeof x.q === "string" && okC(x.c) && x.a >= 0 && x.a < x.c.length)
+    .map(x => { const o = { tp: x.tp, q: x.q, c: x.c, a: x.a }; if (x.es && typeof x.es.q === "string" && okC(x.es.c) && x.es.c.length === x.c.length) o.es = { q: x.es.q, c: x.es.c }; return o; });
+}
+function checkCourse(d){
+  if (!d || typeof d !== "object") return null;
+  const c = blankCourse();
+  c.title = str(d.title, 60); c.teacher = str(d.teacher, 40); c.grade = str(d.grade, 40);
+  c.theme = THEMES[d.theme] ? d.theme : "plain";
+  c.pref = d.pref && typeof d.pref === "object" ? d.pref : {};
+  const tps = d.topics && typeof d.topics === "object" ? d.topics : {};
+  for (const id in tps){
+    const t = tps[id];
+    if (!/^[a-z0-9-]{1,40}$/.test(id) || !t || typeof t !== "object") continue;
+    const o = { title: str(t.title, 80) || id, sum: str(t.sum, 240), sheet: str(t.sheet, 30000) };
+    if (t.es && typeof t.es === "object" && (t.es.sheet || t.es.title)) o.es = { title: str(t.es.title, 80), sum: str(t.es.sum, 240), sheet: str(t.es.sheet, 30000) };
+    c.topics[id] = o;
+  }
+  const seen = new Set();
+  (Array.isArray(d.units) ? d.units : []).forEach(u => {
+    if (!u || typeof u.id !== "string" || !/^u[a-z0-9]{1,12}$/.test(u.id) || c.units.some(x => x.id === u.id)) return;
+    const tp = (Array.isArray(u.tp) ? u.tp : []).filter(id => c.topics[id] && !seen.has(id));
+    tp.forEach(id => seen.add(id));
+    c.units.push({ id: u.id, name: str(u.name, 50) || "Unit", tp });
+  });
+  for (const id in c.topics) if (!seen.has(id)) delete c.topics[id];   // a topic belongs to a unit
+  c.q = checkQ(d.q, c.topics);
+  return c;
+}
+function loadCourse(){ try { return checkCourse(JSON.parse(localStorage.getItem(COURSE_KEY))) || blankCourse(); } catch(e){ return blankCourse(); } }
+function writeCourse(){ try { localStorage.setItem(COURSE_KEY, JSON.stringify(course)); return true; } catch(e){ return false; } }
+let course = loadCourse();
+
+/* CLASS: the class link this device opened, { v, t: link name, g: games, c: course } */
+const GAMES = ["hoops", "derby", "paint", "snake", "blasteroids", "zombie"];
+let CLASS = null;
+function checkClass(d){
+  if (!d || typeof d !== "object" || !Array.isArray(d.g)) return null;
+  const c = checkCourse(d.c);
+  if (!c || !Object.keys(c.topics).length) return null;
+  return { v: 1, t: str(d.t, 40), g: GAMES.filter(s => d.g.includes(s)), c };
+}
+function loadClass(){ try { CLASS = checkClass(JSON.parse(localStorage.getItem(CLASS_KEY))); } catch(e){ CLASS = null; } }
+
+/* the course on screen: the class link's on a student's device, otherwise the teacher's own */
+function C(){ return CLASS ? CLASS.c : course; }
+function unitOf(id){ return C().units.find(u => u.id === id); }
+function topicL(id){ const t = C().topics[id]; return LANG === "es" && t.es && t.es.sheet ? Object.assign({}, t, { title: t.es.title || t.title, sum: t.es.sum || t.sum, sheet: t.es.sheet }) : t; }
+function cardTitle(id){ return topicL(id).title; }
+function hasTopics(u){ const x = unitOf(u); return !!(x && x.tp.length); }
+function courseTitle(){ return C().title || T("My Class", "Mi clase"); }
+function slug(s){ return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 32) || "topic"; }
+function newTopicId(title){ const b = slug(title); let id = b, n = 2; while (course.topics[id]) id = b + "-" + n++; return id; }
+function newUnitId(){ let id; do id = "u" + Math.random().toString(36).slice(2, 7); while (course.units.some(u => u.id === id)); return id; }
+
+function markDone(key){ save.items[key] = Object.assign(save.items[key] || {}, { viewed: true, at: Date.now() }); writeSave(); }
+function isDone(key){ return !!(save.items[key] && save.items[key].viewed); }
+
+/* Order: student's order if they made one, with any new teacher topics
+   inserted right after the teacher's previous topic. */
+function getOrder(u){
+  const x = unitOf(u), teacher = x ? x.tp.filter(id => C().topics[id]) : [];
+  const mine = save.order[u];
+  if (!Array.isArray(mine)) return teacher;
+  const result = mine.filter(id => teacher.includes(id));
+  teacher.forEach((id, i) => {
+    if (result.includes(id)) return;
+    let pos = 0;
+    for (let j = i - 1; j >= 0; j--) { const k = result.indexOf(teacher[j]); if (k >= 0) { pos = k + 1; break; } }
+    result.splice(pos, 0, id);
+  });
+  return result;
+}
+
+/* a topic's icon on the contents list: its number in a theme-colored badge */
+function badge(n){
+  const c = themeOf(C().theme).c;
+  return `<svg viewBox="0 0 56 56" aria-hidden="true"><rect x="3" y="3" width="50" height="50" rx="15" fill="${c.panel2}" stroke="${c.line}" stroke-width="2"/><path d="M14 40 H42" stroke="${c.ice}" stroke-width="2" opacity=".35" stroke-linecap="round"/><text x="28" y="35" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="22" fill="${c.amber}">${n}</text></svg>`;
+}
+
+/* =========================================================
+   TITLE SCREEN
+   ========================================================= */
+function renderTitle(){
+  const c = C(), title = courseTitle();
+  applyTheme(c.theme);
+  $("#app-title").innerHTML = `${esc(title)}<span>${c.teacher ? esc(T(`${c.teacher}’s class notebook`, `Cuaderno de la clase de ${c.teacher}`)) : T("Notebook", "Cuaderno")}</span>`;
+  document.title = title + " " + T("Notebook", "Cuaderno");
+  const units = c.units.filter(u => u.tp.length);
+  const sel = $("#unit"), keep = sel.value || save.lastUnit;
+  sel.innerHTML = `<option value="">${T("Choose…", "Elige…")}</option>` + units.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join("");
+  sel.value = units.some(u => u.id === keep) ? keep : "";
+  $("#openU").disabled = !sel.value;
+  $("#unitPick").hidden = !units.length;
+  const games = CLASS ? CLASS.g : GAMES;
+  [...$("#game").options].forEach(o => { if (o.value) o.hidden = o.disabled = !games.includes(o.value); });
+  $("#gamePick").hidden = !units.length || !games.length || !allQuestions().length;
+  const w = $("#welcome");
+  w.hidden = !!units.length;
+  w.innerHTML = CLASS ? "" : `<p><b>${T("This notebook is a blank canvas.", "Este cuaderno está en blanco.")}</b></p>
+    <p>${T("<b>Teachers:</b> tap the cog in the corner to name your class, pick a theme, and add cheat sheets.", "<b>Maestros:</b> toquen el engranaje de la esquina para ponerle nombre a su clase, elegir un tema y agregar hojas de estudio.")}</p>
+    <p>${T("<b>Students:</b> open the class link your teacher gave you.", "<b>Estudiantes:</b> abran el enlace de clase que les dio su maestro.")}</p>`;
+  $(".lede").hidden = !units.length;
+  $("#cogBtn").hidden = !!CLASS;
+  const bar = $("#classBar");
+  bar.hidden = !CLASS || !CLASS.t;
+  if (CLASS && CLASS.t) bar.innerHTML = `<b>${esc(CLASS.t)}</b>`;
+}
+
+/* =========================================================
+   VIEWS + ROUTING   #  |  #<unit id>  |  #<unit id>/<topic id>
+   ========================================================= */
+const views = { title: $("#title"), toc: $("#toc"), card: $("#cardView") };
+function show(name){ for (const k in views) views[k].classList.toggle("on", k === name); window.scrollTo(0, 0); }
+function go(hash){ if (location.hash.replace(/^#/,"") === hash) route(); else location.hash = hash ? "#" + hash : ""; if (!hash) route(); }
+
+function route(){
+  if (/^#(class=|teacher$)/.test(location.hash)) return location.reload();   // a class link (or #teacher) opened in a tab that already had the notebook
+  const [u, id] = location.hash.replace(/^#/, "").split("/");
+  if (u && hasTopics(u)){
+    if (id && unitOf(u).tp.includes(id)) return openCard(u, id);
+    return openToc(u);
+  }
+  renderTitle();
+  show("title");
+}
+
+let currentU = null;
+function openToc(u){
+  currentU = u;
+  const order = getOrder(u), x = unitOf(u), c = C();
+  applyTheme(c.theme);
+  $("#tocCrumb").textContent = courseTitle();
+  $("#tocTitle").textContent = x.name;
+  const list = $("#tocList");
+  list.dataset.u = u;
+  list.innerHTML = order.map((id, i) => {
+    const t = topicL(id), done = isDone(u + "." + id);
+    return `<li data-id="${id}"><button data-card="${id}">${badge(x.tp.indexOf(id) + 1)}<span><h3>${esc(t.title)}</h3><p>${esc(t.sum || "")}</p></span><span class="status ${done ? "done" : ""}">${done ? T("✓ Done", "✓ Listo") : T("New", "Nuevo")}</span></button></li>`;
+  }).join("");
+  const n = order.filter(id => isDone(u + "." + id)).length;
+  $("#tocProgress").textContent = n ? T(`${n} of ${order.length} topics explored`, `${n} de ${order.length} temas explorados`) : T("Pick a topic to start.", "Elige un tema para empezar.");
+  $("#meterFill").style.width = (n / order.length * 100) + "%";
+  const rb = $("#resetOrder");
+  rb.hidden = !Array.isArray(save.order[u]);
+  rb.textContent = c.teacher ? T(`Reset to ${c.teacher}’s order`, `Volver al orden de ${c.teacher}`) : T("Reset to the teacher’s order", "Volver al orden del maestro");
+  show("toc");
+}
+
+let currentCard = null;
+function openCard(u, id){
+  currentU = u; currentCard = id;
+  const t = topicL(id), c = C();
+  applyTheme(c.theme);
+  $("#cardCrumb").textContent = unitOf(u).name;
+  $("#cardBack").dataset.go = u;
+  const body = sheetHtml(t.sheet);
+  $("#cardBody").innerHTML = `<div class="card-band">${themeSvg(c.theme)}</div><h2>${esc(t.title)}</h2>${t.sum ? `<p class="intro">${esc(t.sum)}</p>` : ""}${body || `<p class="empty-sheet">${T("This topic doesn’t have a cheat sheet yet.", "Este tema todavía no tiene hoja de estudio.")}</p>`}`;
+  const order = getOrder(u), next = order[order.indexOf(id) + 1];
+  $("#nextBtn").textContent = next ? T("Done, next topic", "Listo, siguiente tema") : T("Done, back to contents", "Listo, volver al contenido");
+  show("card");
+}
+
+/* =========================================================
+   DRAG TO REORDER (press and hold, then drag)
+   ========================================================= */
+let drag = null, suppressClick = false;
+const tocList = $("#tocList");
+
+function startPress(li, x, y){
+  cancelPress();
+  drag = { li, x0: x, y0: y, y, active: false };
+  drag.timer = setTimeout(activateDrag, 350);
+}
+function cancelPress(){ if (drag){ clearTimeout(drag.timer); if (!drag.active) drag = null; } }
+function activateDrag(){
+  if (!drag) return;
+  drag.active = true;
+  const r = drag.li.getBoundingClientRect();
+  drag.grab = drag.y - r.top;
+  drag.li.classList.add("lifted");
+  document.body.classList.add("dragging");
+  if (navigator.vibrate) navigator.vibrate(15);
+  positionDrag();
+  requestAnimationFrame(autoScroll);
+}
+function moveDrag(x, y, e){
+  if (!drag) return;
+  drag.y = y;
+  if (!drag.active){ if (Math.hypot(x - drag.x0, y - drag.y0) > 10) cancelPress(); return; }
+  if (e && e.cancelable) e.preventDefault();
+  positionDrag();
+}
+function positionDrag(){
+  const li = drag.li, target = drag.y - drag.grab, mid = drag.y;
+  let before = null;
+  for (const n of tocList.children){
+    if (n === li) continue;
+    const r = n.getBoundingClientRect();
+    if (mid < r.top + r.height / 2){ before = n; break; }
+  }
+  if (before !== li.nextElementSibling) tocList.insertBefore(li, before);
+  const natural = tocList.getBoundingClientRect().top + li.offsetTop;
+  li.style.transform = `translateY(${target - natural}px)`;
+}
+function autoScroll(){
+  if (!drag || !drag.active) return;
+  const edge = 70;
+  if (drag.y < edge) { window.scrollBy(0, -8); positionDrag(); }
+  else if (drag.y > window.innerHeight - edge) { window.scrollBy(0, 8); positionDrag(); }
+  requestAnimationFrame(autoScroll);
+}
+function endPress(){
+  if (!drag) return;
+  clearTimeout(drag.timer);
+  if (drag.active){
+    drag.li.style.transform = "";
+    drag.li.classList.remove("lifted");
+    document.body.classList.remove("dragging");
+    save.order[tocList.dataset.u] = [...tocList.children].map(n => n.dataset.id);
+    writeSave();
+    $("#resetOrder").hidden = false;
+    suppressClick = true;
+    setTimeout(() => { suppressClick = false; }, 400);
+  }
+  drag = null;
+}
+tocList.addEventListener("touchstart", e => { const li = e.target.closest("li"); if (li){ const t = e.touches[0]; startPress(li, t.clientX, t.clientY); } }, { passive: true });
+tocList.addEventListener("mousedown", e => { if (e.button !== 0) return; const li = e.target.closest("li"); if (li) startPress(li, e.clientX, e.clientY); });
+tocList.addEventListener("contextmenu", e => e.preventDefault());
+document.addEventListener("touchmove", e => { if (drag){ const t = e.touches[0]; moveDrag(t.clientX, t.clientY, e); } }, { passive: false });
+document.addEventListener("mousemove", e => { if (drag) moveDrag(e.clientX, e.clientY, e); });
+document.addEventListener("touchend", endPress);
+document.addEventListener("touchcancel", endPress);
+document.addEventListener("mouseup", endPress);
+document.addEventListener("click", e => { if (suppressClick){ e.stopPropagation(); e.preventDefault(); suppressClick = false; } }, true);
+
+$("#resetOrder").addEventListener("click", () => {
+  delete save.order[currentU]; writeSave(); openToc(currentU);
+});
+
+/* =========================================================
+   SHEET, SAVE CHECK
+   ========================================================= */
+/* o.tall: scrolls when taller than the screen; o.locked: can't be closed by tapping outside (first-time sign in) */
+let sheetLocked = false;
+function openSheet(html, o = {}){
+  sheetLocked = !!o.locked;
+  const sh = $("#sheet");
+  sh.className = "sheet" + (o.tall ? " tall" : "");
+  sh.innerHTML = html; sh.scrollTop = 0;
+  $("#scrim").classList.add("on");
+  const b = sh.querySelector("button"); if (b) b.focus({ preventScroll: true });
+}
+function closeSheet(){ $("#scrim").classList.remove("on"); sheetLocked = false; applyTheme(C().theme); }   // drops a theme the title page screen was only previewing
+$("#scrim").addEventListener("click", e => { if ((e.target.id === "scrim" && !sheetLocked) || e.target.dataset.close !== undefined) closeSheet(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !sheetLocked) closeSheet(); });
+
+function saveCheck(){
+  openSheet(`<h3 id="sheetTitle">${T("Save check", "Prueba de guardado")}</h3>
+    <p>${T("This number is stored on this device. Tap it a few times, then open a newer version of the notebook from the same link. If the number is still here, saving works.", "Este número se guarda en este aparato. Tócalo varias veces y luego abre una versión más nueva del cuaderno con el mismo enlace. Si el número sigue aquí, el guardado funciona.")}</p>
+    <div class="count" id="countNum">${save.saveTest}</div>
+    <p class="small">${storageOK ? T("Saving is on.", "El guardado está activado.") : T("Saving isn’t available in this browser. Try opening the link in Safari or Chrome.", "No se puede guardar en este navegador. Abre el enlace en Safari o Chrome.")} ${T("App version", "Versión")} ${APP_VERSION}</p>
+    <div class="row"><button class="btn" id="tapCount">${T("Tap +1", "Toca +1")}</button><button class="btn ghost" data-close>${T("Close", "Cerrar")}</button></div>`);
+  $("#tapCount").addEventListener("click", () => { save.saveTest++; writeSave(); $("#countNum").textContent = save.saveTest; });
+}
+/* copy text, or show it selected in a box when the browser won't let us */
+function copyText(text, box, msg, okText){
+  const fallback = () => {
+    box.value = text; box.hidden = false; box.focus(); box.select();
+    msg.className = "msg warn"; msg.textContent = T("Couldn’t copy automatically. The text is selected in the box below: copy it yourself.", "No se pudo copiar solo. El texto está seleccionado en el cuadro de abajo: cópialo tú.");
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(() => { box.hidden = true; msg.className = "msg"; msg.textContent = okText; }, fallback);
+  } else fallback();
+}
+/* a delete button that needs a second tap */
+function armed(btn, label, again, run){
+  let t = null;
+  btn.addEventListener("click", () => {
+    if (!t){ btn.textContent = again; t = setTimeout(() => { t = null; btn.textContent = label; }, 4000); return; }
+    clearTimeout(t); t = null; run();
+  });
+}
+
+/* =========================================================
+   STUDENT SIGN IN  (language, name, period)
+   Asked on first open of a class link, or before a first game.
+   ========================================================= */
+function fullName(p){ return p ? (p.first + " " + p.last).trim() : ""; }
+function renderMeLine(){
+  const p = save.profile;
+  $("#meLine").innerHTML = p ? `${esc(fullName(p))}${p.per ? ` · ${T("Period", "Período")} ${esc(p.per)}` : ""}` : "";
+}
+function profileSheet(firstTime, after){
+  const p = save.profile || {};
+  let lang = p.lang || LANG;
+  const vals = { first: p.first || "", last: p.last || "", per: p.per || "" };
+  const draw = () => {
+    const t = (en, es) => lang === "es" ? es : en;
+    openSheet(`<h3 id="sheetTitle">${firstTime ? t("Welcome!", "¡Hola!") : t("Your info", "Tus datos")}</h3>
+      <p>${t("This shows on your review game score cards. It saves on this device.", "Esto aparece en tus tarjetas de puntaje de los juegos de repaso. Se guarda en este aparato.")}</p>
+      <div class="seg" id="pLang"><button type="button" data-v="en" aria-pressed="${lang === "en"}">English</button><button type="button" data-v="es" aria-pressed="${lang === "es"}">Español</button></div>
+      <label class="field" for="pFirst">${t("First name", "Nombre")}</label>
+      <input class="inp" id="pFirst" maxlength="30" autocomplete="given-name" value="${esc(vals.first)}">
+      <label class="field" for="pLast">${t("Last name", "Apellido")}</label>
+      <input class="inp" id="pLast" maxlength="30" autocomplete="family-name" value="${esc(vals.last)}">
+      <label class="field" for="pPer">${t("Class period", "Período de clase")}</label>
+      <input class="inp num" id="pPer" maxlength="12" inputmode="numeric" autocomplete="off" value="${esc(vals.per)}">
+      <p class="msg warn" id="pMsg"></p>
+      <div class="row"><button class="btn" id="pGo">${firstTime ? t("Start", "Empezar") : t("Save", "Guardar")}</button>${firstTime ? "" : `<button class="btn ghost" data-close>${t("Cancel", "Cancelar")}</button>`}</div>`,
+      { locked: firstTime, tall: true });
+    const keep = () => { vals.first = $("#pFirst").value; vals.last = $("#pLast").value; vals.per = $("#pPer").value; };
+    $("#pLang").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; keep(); lang = b.dataset.v; draw(); });
+    $("#pGo").addEventListener("click", () => {
+      keep();
+      const first = vals.first.trim(), last = vals.last.trim(), per = vals.per.trim();
+      if (!first || !last){ $("#pMsg").textContent = t("Type your first and last name.", "Escribe tu nombre y apellido."); return; }
+      if (!per){ $("#pMsg").textContent = t("Type your class period.", "Escribe tu período de clase."); return; }
+      save.profile = { lang, first, last, per }; writeSave();
+      if (lang !== LANG) return location.reload();
+      closeSheet(); renderMeLine();
+      if (after) after();
+    });
+  };
+  draw();
+}
+
+/* =========================================================
+   REVIEW QUESTIONS
+   Written by AI in the cog, from each topic's cheat sheet, in this format:
+     Topic: water-cycle
+     Question: ...   A: ...  B: ...  C: ...  D: ...   Answer: B
+     Pregunta: ...   A: ...  B: ...  C: ...  D: ...   (same order)
+   ========================================================= */
+function normKey(s){ return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, ""); }
+function findTopic(label){
+  const tps = C().topics, tries = [label, label.split("(")[0], label.split(/\s[-–—]\s/)[0], label.split(":")[0]];
+  for (const tr of tries){
+    const k = normKey(tr); if (!k) continue;
+    for (const id in tps){
+      const t = tps[id];
+      if (normKey(id) === k || normKey(t.title) === k || (t.es && normKey(t.es.title) === k)) return id;
+    }
+  }
+  return null;
+}
+/* one language's part of a question: text, then A: B: C: D: choices, then an optional Answer: letter */
+function parseSection(body){
+  const ans = body.match(/(?:^|[\s,;])(?:correct\s+)?(?:answer|respuesta(?:\s+correcta)?)\s*[:.\-]?\s*\(?([A-E])\b/i);
+  let a = -1;
+  if (ans){ a = ans[1].toUpperCase().charCodeAt(0) - 65; body = body.slice(0, ans.index); }
+  const re = /(^|[\s,;])([A-E])\s*[:.)]\s+/g, marks = [];
+  let m;
+  while ((m = re.exec(body))) if (m[2].charCodeAt(0) - 65 === marks.length) marks.push({ at: m.index + m[1].length, textAt: re.lastIndex });
+  const tidy = x => x.replace(/\s+/g, " ").replace(/[\s,;]+$/, "").trim();
+  const q = tidy(marks.length ? body.slice(0, marks[0].at) : body);
+  const c = marks.map((mk, i) => tidy(body.slice(mk.textAt, i + 1 < marks.length ? marks[i + 1].at : body.length)));
+  return { q, c, a };
+}
+function parseBank(text){
+  const out = [], problems = [], unknown = [];
+  let tp = null, label = "", cur = null;
+  const finish = () => {
+    if (!cur) return;
+    const en = parseSection(cur.en), short = cur.en.trim().split("\n")[0].slice(0, 70);
+    if (!cur.tp){ if (!cur.label) problems.push(short + T(" (no Topic: line)", " (falta la línea Topic:)")); }
+    else if (!en.q || en.c.length < 2 || en.c.some(x => !x) || en.a < 0 || en.a >= en.c.length) problems.push(short);
+    else {
+      const q = { tp: cur.tp, q: en.q, c: en.c, a: en.a };
+      if (cur.es != null){ const es = parseSection(cur.es); if (es.q && es.c.length === en.c.length && es.c.every(x => x)) q.es = { q: es.q, c: es.c }; }
+      out.push(q);
+    }
+    cur = null;
+  };
+  const lines = String(text || "").replace(/\r/g, "").split("\n");
+  for (let line of lines){
+    line = line.replace(/\*\*|__/g, "").replace(/\\([*_`#\[\]()\-.!>+~|?:])/g, "$1").replace(/^\s*(?:#+|>|[-*•])\s*/, "").replace(/^\s*\d+\s*[.)]\s+(?=(?:topic|tema|question|pregunta)\b)/i, "");
+    let m;
+    if ((m = line.match(/^\s*(?:topic|tema)\s*[:.\-]\s*(.+)$/i))){
+      finish(); label = m[1].trim(); tp = findTopic(label);
+      if (!tp && !unknown.includes(label)) unknown.push(label);
+    } else if ((m = line.match(/^\s*(?:question|q)\s*\d*\s*[:.)\-]\s*(.*)$/i))){
+      finish(); cur = { tp, label: tp ? "" : label, en: m[1], es: null };
+    } else if ((m = line.match(/^\s*pregunta\s*\d*\s*[:.)\-]\s*(.*)$/i))){
+      if (cur && cur.es == null) cur.es = m[1];
+    } else if (cur){
+      if (cur.es != null) cur.es += "\n" + line; else cur.en += "\n" + line;
+    }
+  }
+  finish();
+  return { questions: out, problems, unknown };
+}
+const qKey = q => q.tp + "|" + normKey(q.q);
+function allQuestions(){ return C().q; }
+function countsBy(list){ const n = {}; list.forEach(q => { n[q.tp] = (n[q.tp] || 0) + 1; }); return n; }
+
+/* topic buttons, grouped by unit; tap to highlight */
+function topicPicker(selected, counts, opt){
+  const units = C().units;
+  if (!units.some(u => u.tp.length)) return `<p class="small" style="margin:0">${T("No topics yet. Add cheat sheets first.", "Todavía no hay temas. Primero agrega hojas de estudio.")}</p>`;
+  return units.filter(u => u.tp.length).map(u => {
+    const ids = opt.student ? getOrder(u.id) : u.tp;
+    const chips = ids.map(id => {
+      const n = counts[id] || 0, off = opt.needQ && !n;
+      return `<button type="button" class="tchip" data-tp="${id}" aria-pressed="${selected.has(id)}"${off ? " disabled" : ""}>${esc(cardTitle(id))}${opt.showCount ? `<small>${n}</small>` : ""}</button>`;
+    }).join("");
+    return `<div class="qgroup" data-u="${u.id}"><div class="qgroup-head"><b>${esc(u.name)}</b><button type="button" class="linkish" data-allu="${u.id}"></button></div><div class="tchips">${chips}</div></div>`;
+  }).join("");
+}
+function bindPicker(root, selected, onChange){
+  const chipsOf = u => [...root.querySelectorAll(`.qgroup[data-u="${u}"] .tchip:not(:disabled)`)];
+  const refresh = () => {
+    root.querySelectorAll("[data-allu]").forEach(b => {
+      const chips = chipsOf(b.dataset.allu);
+      b.textContent = chips.length && chips.every(x => selected.has(x.dataset.tp)) ? T("Clear", "Quitar") : T("Select all", "Elegir todos");
+      b.hidden = !chips.length;
+    });
+    onChange();
+  };
+  root.addEventListener("click", e => {
+    const c = e.target.closest(".tchip");
+    if (c && !c.disabled){
+      const id = c.dataset.tp;
+      if (selected.has(id)) selected.delete(id); else selected.add(id);
+      c.setAttribute("aria-pressed", selected.has(id));
+      return refresh();
+    }
+    const a = e.target.closest("[data-allu]");
+    if (a){
+      const chips = chipsOf(a.dataset.allu), allOn = chips.every(x => selected.has(x.dataset.tp));
+      chips.forEach(x => { if (allOn) selected.delete(x.dataset.tp); else selected.add(x.dataset.tp); x.setAttribute("aria-pressed", !allOn); });
+      refresh();
+    }
+  });
+  refresh();
+}
+function topicsInOrder(selected){ return C().units.flatMap(u => u.tp).filter(id => selected.has(id)); }
+
+/* =========================================================
+   REVIEW GAMES  (the games live in games.html, paint.html, ...)
+   ========================================================= */
+function gameSheet(sport){
+  if (!save.profile) return profileSheet(false, () => gameSheet(sport));
+  const counts = countsBy(allQuestions()), last = save.game || {};
+  const selected = new Set((last.topics || []).filter(id => counts[id]));
+  openSheet(`<h3 id="sheetTitle">${sport === "derby" ? T("Home Run Derby", "Derby de jonrones") : sport === "paint" ? T("Restore the Masters", "Restaura las obras maestras") : sport === "snake" ? T("Snake", "La serpiente") : sport === "blasteroids" ? T("Blasteroids", "Blasteroids") : sport === "zombie" ? T("Zombie Horde", "La horda zombi") : T("Basketball", "Baloncesto")}</h3>
+    <p>${sport === "derby" ? T("Answer 3 questions right to step up to bat. When time runs out, you get a score card.", "Contesta 3 preguntas bien para pasar al bate. Cuando se acabe el tiempo, verás tu tarjeta de puntaje.")
+      : sport === "paint" ? T("Every right answer earns 2 brush strokes. Answer at least 3 right to start painting, or keep going to save up more. When time runs out, you get a score card.", "Cada respuesta correcta gana 2 pinceladas. Contesta por lo menos 3 bien para empezar a pintar, o sigue para juntar más. Cuando se acabe el tiempo, verás tu tarjeta de puntaje.")
+      : sport === "snake" ? T("Answer 3 questions right to start, then 3 more after every 2 levels and every time you crash. Beat all 6 levels and the evil snake comes out to race you. When time runs out, you get a score card.", "Contesta 3 preguntas bien para empezar, y 3 más cada 2 niveles y cada vez que choques. Pasa los 6 niveles y sale la serpiente malvada a echarte una carrera. Cuando se acabe el tiempo, verás tu tarjeta de puntaje.")
+      : sport === "blasteroids" ? T("Answer 3 questions right before every wave as you fly through all 4 modes. Lose a ship? Answer 3 right to launch the next one. You get 3 ships, then it's back to wave 1. When time runs out, you get a score card.", "Contesta 3 preguntas bien antes de cada oleada mientras vuelas por los 4 modos. ¿Perdiste una nave? Contesta 3 bien para lanzar la siguiente. Tienes 3 naves, y después vuelves a la oleada 1. Cuando se acabe el tiempo, verás tu tarjeta de puntaje.")
+      : sport === "zombie" ? T("Answer 3 questions right to send 3 men into wave 1. After every bonus round, answer up to 10 questions: each right answer is 1 man for the next wave. Lose your squad? Answer more to try the wave again. Stay above 40% correct or the zombies take over. When time runs out, you get a score card.", "Contesta 3 preguntas bien para mandar 3 soldados a la oleada 1. Después de cada ronda de bonificación, contesta hasta 10 preguntas: cada respuesta correcta es 1 soldado para la siguiente oleada. ¿Perdiste tu escuadrón? Contesta más para intentar la oleada otra vez. Mantente arriba del 40% correcto o los zombis se apoderan del mundo. Cuando se acabe el tiempo, verás tu tarjeta de puntaje.")
+      : T("Answer 3 questions right to earn 3 balls. When time runs out, you get a score card.", "Contesta 3 preguntas bien para ganar 3 balones. Cuando se acabe el tiempo, verás tu tarjeta de puntaje.")}</p>
+    <label class="field" for="gMins">${T("How many minutes do you want to play?", "¿Cuántos minutos quieres jugar?")}</label>
+    <input class="inp num" id="gMins" type="number" inputmode="numeric" min="1" max="60" value="${last.mins || 5}">
+    <span class="field">${T("Which topics do you want to review?", "¿Qué temas quieres repasar?")}</span>
+    <div id="gPick">${topicPicker(selected, counts, { needQ: true, showCount: false, student: true })}</div>
+    <p class="msg" id="gMsg"></p>
+    <div class="row"><button class="btn" id="gGo">${T("Play", "Jugar")}</button><button class="btn ghost" data-close>${T("Cancel", "Cancelar")}</button></div>`, { tall: true });
+  bindPicker($("#gPick"), selected, () => {
+    const n = [...selected].reduce((a, id) => a + (counts[id] || 0), 0);
+    $("#gGo").disabled = !n;
+    $("#gMsg").className = "msg" + (n ? "" : " warn");
+    $("#gMsg").textContent = n ? T(`${selected.size} ${selected.size === 1 ? "topic" : "topics"}, ${n} questions`, `${selected.size} ${selected.size === 1 ? "tema" : "temas"}, ${n} preguntas`)
+      : T("Tap the topics you want to review.", "Toca los temas que quieres repasar.");
+  });
+  $("#gGo").addEventListener("click", () => {
+    const mins = Math.min(60, Math.max(1, parseInt($("#gMins").value, 10) || 5));
+    const ids = topicsInOrder(selected);
+    save.game = Object.assign(save.game || {}, { mins, topics: ids }); writeSave();
+    const p = save.profile || {};
+    const data = {
+      v: 1, s: sport, m: mins, lang: LANG, name: fullName(p), first: p.first || "", per: p.per || "", course: courseTitle(),
+      topics: ids.map(id => ({ id, name: cardTitle(id) })),
+      q: allQuestions().filter(q => ids.includes(q.tp))
+    };
+    try { localStorage.setItem(LAUNCH_KEY, JSON.stringify(data)); }
+    catch(e){ $("#gMsg").className = "msg warn"; $("#gMsg").textContent = T("This browser won’t let the game start. Try Safari or Chrome.", "Este navegador no deja empezar el juego. Prueba Safari o Chrome."); return; }
+    location.href = sport === "paint" ? "paint.html#ess" : sport === "snake" ? "snake.html#ess" : sport === "blasteroids" ? "blasteroids.html#ess" : sport === "zombie" ? "zombie.html#ess" : "games.html#ess";
+  });
+}
+
+/* =========================================================
+   COG: TEACHER SETTINGS  (saved on this device; students get them by class link)
+   ========================================================= */
+function backRow(){ return `<div class="row"><button class="btn ghost" id="sBack">${T("Back", "Atrás")}</button><button class="btn ghost" data-close>${T("Close", "Cerrar")}</button></div>`; }
+function bindBack(to){ $("#sBack").addEventListener("click", to); }
+function saved(){ if (!writeCourse()) alert(T("This browser couldn’t save. Try Safari or Chrome, and make sure you’re not in a private window.", "Este navegador no pudo guardar. Prueba Safari o Chrome, y asegúrate de que no estás en una ventana privada.")); renderTitle(); }
+
+function cogSheet(){
+  if (CLASS) return;   // students on a class link can't change the notebook
+  const c = course, nT = Object.keys(c.topics).length;
+  openSheet(`<h3 id="sheetTitle">${T("Teacher settings", "Ajustes del maestro")}</h3>
+    <p>${T("Everything you make here is saved in this browser. Share it with students by making a class link.", "Todo lo que hagas aquí se guarda en este navegador. Compártelo con tus estudiantes haciendo un enlace de clase.")}</p>
+    <div class="menu">
+      <button id="mTitle"><b>${T("Edit title page", "Editar la portada")}</b><span>${esc(courseTitle())}${c.teacher ? " · " + esc(c.teacher) : ""} · ${esc(themeOf(c.theme).n[LANG === "es" ? 1 : 0])}</span></button>
+      <button id="mUnits"><b>${T("Units and cheat sheets", "Unidades y hojas de estudio")}</b><span>${T(`${c.units.length} ${c.units.length === 1 ? "unit" : "units"}, ${nT} ${nT === 1 ? "topic" : "topics"}. Paste in AI-made cheat sheets; each one becomes a topic.`, `${c.units.length} ${c.units.length === 1 ? "unidad" : "unidades"}, ${nT} ${nT === 1 ? "tema" : "temas"}. Pega hojas de estudio hechas con IA; cada una es un tema.`)}</span></button>
+      <button id="mQs"${nT ? "" : " disabled"}><b>${T("Review questions", "Preguntas de repaso")}</b><span>${T(`${c.q.length} questions for the review games, written by AI from your cheat sheets.`, `${c.q.length} preguntas para los juegos de repaso, escritas con IA a partir de tus hojas de estudio.`)}</span></button>
+      <button id="mLink"${nT ? "" : " disabled"}><b>${T("Make a class link", "Hacer un enlace de clase")}</b><span>${T("A link that gives students your title page, cheat sheets, and games. Post it on Canvas or your class website.", "Un enlace que les da a tus estudiantes tu portada, hojas de estudio y juegos. Publícalo en Canvas o en el sitio web de tu clase.")}</span></button>
+      <button id="mBackup"><b>${T("Backup", "Copia de seguridad")}</b><span>${T("Save everything to a file, or load it on another computer.", "Guarda todo en un archivo o cárgalo en otra computadora.")}</span></button>
+    </div>
+    <div class="row"><button class="btn ghost" data-close>${T("Close", "Cerrar")}</button></div>`, { tall: true });
+  $("#mTitle").addEventListener("click", titleSheet);
+  $("#mUnits").addEventListener("click", unitsSheet);
+  $("#mQs").addEventListener("click", questionsSheet);
+  $("#mLink").addEventListener("click", linkSheet);
+  $("#mBackup").addEventListener("click", backupSheet);
+}
+
+/* ---- title page: course name, teacher, theme ---- */
+function titleSheet(){
+  const c = course;
+  let theme = c.theme;
+  openSheet(`<h3 id="sheetTitle">${T("Edit title page", "Editar la portada")}</h3>
+    <label class="field" for="tCourse">${T("Course name", "Nombre del curso")}</label>
+    <input class="inp" id="tCourse" maxlength="60" value="${esc(c.title)}" placeholder="${T("Algebra 1, Biology, U.S. History…", "Álgebra 1, Biología, Historia de EE. UU.…")}">
+    <label class="field" for="tTeacher">${T("Teacher name (optional)", "Nombre del maestro (opcional)")}</label>
+    <input class="inp" id="tTeacher" maxlength="40" value="${esc(c.teacher)}" placeholder="${T("Ms. Rivera", "Sra. Rivera")}">
+    <p class="small" style="margin:6px 0 0">${T("Shows under the title as “Ms. Rivera’s class notebook”.", "Sale debajo del título como “Cuaderno de la clase de Sra. Rivera”.")}</p>
+    <span class="field">${T("Theme (sets the cover art and colors)", "Tema (cambia el dibujo de la portada y los colores)")}</span>
+    <div class="themes" id="tThemes">${THEME_ORDER.map(k => `<button type="button" class="theme" data-th="${k}" aria-pressed="${k === theme}">${themeSvg(k)}<span>${esc(THEMES[k].n[LANG === "es" ? 1 : 0])}</span></button>`).join("")}</div>
+    <label class="field" for="tGrade">${T("Grade level (used in the AI prompts)", "Nivel escolar (para las instrucciones de IA)")}</label>
+    <input class="inp" id="tGrade" maxlength="40" value="${esc(c.grade)}" placeholder="${T("9th grade", "9.º grado")}">
+    <p class="msg" id="tMsg"></p>
+    <div class="row"><button class="btn" id="tSave">${T("Save", "Guardar")}</button><button class="btn ghost" id="sBack">${T("Back", "Atrás")}</button></div>`, { tall: true });
+  $("#tThemes").addEventListener("click", e => {
+    const b = e.target.closest(".theme"); if (!b) return;
+    theme = b.dataset.th;
+    $("#tThemes").querySelectorAll(".theme").forEach(x => x.setAttribute("aria-pressed", x === b));
+    applyTheme(theme);   // preview it behind the sheet
+  });
+  $("#tSave").addEventListener("click", () => {
+    c.title = $("#tCourse").value.trim().slice(0, 60); c.teacher = $("#tTeacher").value.trim().slice(0, 40);
+    c.grade = $("#tGrade").value.trim().slice(0, 40); c.theme = theme;
+    saved();
+    $("#tMsg").textContent = T("Saved. Students see it once you make a new class link.", "Guardado. Los estudiantes lo verán cuando hagas un nuevo enlace de clase.");
+  });
+  bindBack(() => { applyTheme(course.theme); cogSheet(); });
+}
+
+/* ---- units and topics ---- */
+function unitsSheet(){
+  const c = course;
+  const unitHtml = (u, i) => `<div class="unit" data-u="${u.id}">
+      <div class="unit-head"><b>${esc(u.name)}</b>
+        <button class="mini" data-act="uup" ${i ? "" : "disabled"} aria-label="${T("Move up", "Subir")}">↑</button><button class="mini" data-act="udown" ${i < c.units.length - 1 ? "" : "disabled"} aria-label="${T("Move down", "Bajar")}">↓</button>
+        <button class="mini" data-act="uren">${T("Rename", "Renombrar")}</button><button class="mini danger" data-act="udel">${T("Delete", "Borrar")}</button></div>
+      ${u.tp.map((id, j) => { const t = c.topics[id], n = c.q.filter(q => q.tp === id).length; return `<div class="trow" data-tp="${id}"><span>${esc(t.title)}<small>${T(`${n} questions`, `${n} preguntas`)}${t.es && t.es.sheet ? " · Español ✓" : ""}</small></span>
+        <button class="mini" data-act="tup" ${j ? "" : "disabled"} aria-label="${T("Move up", "Subir")}">↑</button><button class="mini" data-act="tdown" ${j < u.tp.length - 1 ? "" : "disabled"} aria-label="${T("Move down", "Bajar")}">↓</button>
+        <button class="mini" data-act="tedit">${T("Edit", "Editar")}</button></div>`; }).join("")}
+      <div class="row" style="margin-top:10px"><button class="btn ghost" data-act="tadd">+ ${T("Add a cheat sheet", "Agregar una hoja de estudio")}</button></div>
+    </div>`;
+  openSheet(`<h3 id="sheetTitle">${T("Units and cheat sheets", "Unidades y hojas de estudio")}</h3>
+    <p>${T("Units show in the <b>Open a unit</b> menu. Each cheat sheet you add becomes a topic in its unit.", "Las unidades salen en el menú <b>Abre una unidad</b>. Cada hoja de estudio que agregues es un tema de su unidad.")}</p>
+    <div id="uList">${c.units.map(unitHtml).join("") || `<p class="small">${T("No units yet.", "Todavía no hay unidades.")}</p>`}</div>
+    <label class="field" for="uName">${T("New unit name", "Nombre de la unidad nueva")}</label>
+    <div class="picker"><input class="inp" id="uName" maxlength="50" placeholder="${T(`Unit ${c.units.length + 1}: …`, `Unidad ${c.units.length + 1}: …`)}"><button class="btn" id="uAdd">${T("Add unit", "Agregar")}</button></div>
+    <p class="msg" id="uMsg"></p>
+    ${backRow()}`, { tall: true });
+  bindBack(cogSheet);
+  const add = () => {
+    const name = $("#uName").value.trim().slice(0, 50) || T(`Unit ${c.units.length + 1}`, `Unidad ${c.units.length + 1}`);
+    c.units.push({ id: newUnitId(), name, tp: [] }); saved(); unitsSheet();
+    const box = $("#sheet"); box.scrollTop = box.scrollHeight;
+  };
+  $("#uAdd").addEventListener("click", add);
+  $("#uName").addEventListener("keydown", e => { if (e.key === "Enter") add(); });
+  const move = (list, i, d) => { const j = i + d; if (j < 0 || j >= list.length) return; [list[i], list[j]] = [list[j], list[i]]; };
+  $("#uList").addEventListener("click", e => {
+    const b = e.target.closest("[data-act]"); if (!b) return;
+    const ue = b.closest(".unit"), u = c.units.find(x => x.id === ue.dataset.u), ui = c.units.indexOf(u);
+    const te = b.closest(".trow"), tid = te && te.dataset.tp, act = b.dataset.act;
+    const keepScroll = () => { const s = $("#sheet").scrollTop; unitsSheet(); $("#sheet").scrollTop = s; };
+    if (act === "uup" || act === "udown"){ move(c.units, ui, act === "uup" ? -1 : 1); saved(); return keepScroll(); }
+    if (act === "tup" || act === "tdown"){ move(u.tp, u.tp.indexOf(tid), act === "tup" ? -1 : 1); saved(); return keepScroll(); }
+    if (act === "tedit") return topicSheet(tid);
+    if (act === "tadd") return topicSheet(null, u.id);
+    if (act === "uren"){
+      const head = ue.querySelector(".unit-head");
+      head.innerHTML = `<input class="inp" maxlength="50" value="${esc(u.name)}" style="flex:1;min-width:150px"><button class="mini" data-act="usave">${T("Save", "Guardar")}</button>`;
+      const inp = head.querySelector("input"); inp.focus(); inp.select();
+      inp.addEventListener("keydown", ev => { if (ev.key === "Enter") head.querySelector("[data-act=usave]").click(); });
+      return;
+    }
+    if (act === "usave"){ u.name = ue.querySelector(".unit-head input").value.trim().slice(0, 50) || u.name; saved(); return keepScroll(); }
+    if (act === "udel"){
+      if (b.dataset.armed){
+        u.tp.forEach(id => delete c.topics[id]);
+        c.q = c.q.filter(q => c.topics[q.tp]);
+        c.units.splice(ui, 1); saved(); return keepScroll();
+      }
+      b.dataset.armed = 1;
+      b.textContent = u.tp.length ? T(`Tap again: deletes ${u.tp.length} topics too`, `Toca otra vez: borra ${u.tp.length} temas también`) : T("Tap again to delete", "Toca otra vez para borrar");
+      setTimeout(() => { delete b.dataset.armed; b.textContent = T("Delete", "Borrar"); }, 4000);
+    }
+  });
+}
+
+/* ---- one topic: write its cheat sheet with AI, paste it in, preview it ---- */
+function topicSheet(id, unitId){
+  const c = course, t = id ? c.topics[id] : { title: "", sum: "", sheet: "" };
+  const home = id ? c.units.find(u => u.tp.includes(id)) : c.units.find(u => u.id === unitId);
+  const pref = Object.assign({ len: "std", vocab: true, rem: true, formula: ["math", "science", "cs"].includes(c.theme) }, c.pref);
+  openSheet(`<h3 id="sheetTitle">${id ? T("Edit cheat sheet", "Editar hoja de estudio") : T("Add a cheat sheet", "Agregar una hoja de estudio")}</h3>
+    <label class="field" for="kTitle">${T("Topic title", "Título del tema")}</label>
+    <input class="inp" id="kTitle" maxlength="80" value="${esc(t.title)}" placeholder="${T("Solving two-step equations", "Ecuaciones de dos pasos")}">
+    <label class="field" for="kUnit">${T("Unit", "Unidad")}</label>
+    <div class="select-wrap"><select class="inp" id="kUnit">${c.units.map(u => `<option value="${u.id}"${u === home ? " selected" : ""}>${esc(u.name)}</option>`).join("")}</select></div>
+    <hr>
+    <span class="field">${T("1. Make the AI prompt", "1. Haz las instrucciones para la IA")}</span>
+    <label class="field" for="kNotes">${T("What should it cover? (optional: paste your notes, a reading, or standards)", "¿Qué debe cubrir? (opcional: pega tus apuntes, una lectura o los estándares)")}</label>
+    <textarea class="inp notes" id="kNotes" placeholder="${T("Leave empty and the AI covers the main ideas of the topic.", "Déjalo vacío y la IA cubre las ideas principales del tema.")}"></textarea>
+    <span class="field">${T("Highlight with", "Resaltar con")}</span>
+    <label class="check"><input type="checkbox" id="kVocab"${pref.vocab ? " checked" : ""}><span>${T("<b>Vocabulary cards</b>: key terms with short definitions", "<b>Tarjetas de vocabulario</b>: términos clave con definiciones cortas")}</span></label>
+    <label class="check"><input type="checkbox" id="kRem"${pref.rem ? " checked" : ""}><span>${T("<b>“Remember this” callouts</b>: the must-know ideas in a box", "<b>Recuadros “Recuerda”</b>: las ideas que hay que saber, en un recuadro")}</span></label>
+    <label class="check"><input type="checkbox" id="kFormula"${pref.formula ? " checked" : ""}><span>${T("<b>Formulas and worked examples</b>, step by step", "<b>Fórmulas y ejemplos resueltos</b>, paso a paso")}</span></label>
+    <p class="small" style="margin:2px 0 0">${T("Key words are always highlighted.", "Las palabras clave siempre se resaltan.")}</p>
+    <label class="field" for="kLen">${T("Length", "Largo")}</label>
+    <div class="select-wrap" style="max-width:260px"><select class="inp" id="kLen">
+      <option value="short"${pref.len === "short" ? " selected" : ""}>${T("Short (3–4 sections)", "Corta (3–4 secciones)")}</option>
+      <option value="std"${pref.len === "std" ? " selected" : ""}>${T("Standard (4–6 sections)", "Normal (4–6 secciones)")}</option>
+      <option value="long"${pref.len === "long" ? " selected" : ""}>${T("Detailed (6–8 sections)", "Detallada (6–8 secciones)")}</option></select></div>
+    <div class="row"><button class="btn" id="kCopy">${T("Copy AI prompt", "Copiar instrucciones")}</button></div>
+    <p class="msg" id="kCopyMsg"></p>
+    <textarea class="inp" id="kPromptBox" readonly hidden></textarea>
+    <hr>
+    <label class="field" for="kSheet">${T("2. Paste the AI’s cheat sheet here", "2. Pega aquí la hoja de estudio de la IA")}</label>
+    <p class="small" style="margin:0 0 6px">${T("Paste it into an AI chat like ChatGPT, Gemini, or Claude, then use the chat’s copy button on its answer. You can also type or fix it here: words in **double stars** are highlighted.", "Pégalas en un chat de IA como ChatGPT, Gemini o Claude, y usa el botón de copiar del chat en su respuesta. También puedes escribir o corregir aquí: las palabras entre **dos estrellas** se resaltan.")}</p>
+    <textarea class="inp" id="kSheet" spellcheck="false" placeholder="Title: …&#10;Summary: …&#10;# …&#10;- … **…** …&#10;Vocab: …: …&#10;Remember: …">${esc(t.sheet)}</textarea>
+    <p class="msg" id="kSheetMsg"></p>
+    <div class="preview" id="kPrev" hidden></div>
+    <hr>
+    <span class="field">${T("Spanish cheat sheet (optional)", "Hoja de estudio en español (opcional)")}</span>
+    <p class="small" style="margin:0 0 6px">${T("For students who choose Español. Make the English one first, copy the translation prompt into an AI chat, and paste its answer here.", "Para los estudiantes que eligen español. Primero haz la de inglés, copia las instrucciones de traducción en un chat de IA y pega aquí su respuesta.")}</p>
+    <div class="row" style="margin-top:0"><button class="btn ghost" id="kEsCopy">${T("Copy translation prompt", "Copiar instrucciones de traducción")}</button></div>
+    <p class="msg" id="kEsCopyMsg"></p>
+    <textarea class="inp" id="kEsPromptBox" readonly hidden></textarea>
+    <textarea class="inp" id="kEs" spellcheck="false" style="margin-top:10px" placeholder="Title: …&#10;Summary: …&#10;# …">${esc(t.es ? t.es.sheet : "")}</textarea>
+    <p class="msg" id="kEsMsg"></p>
+    <hr>
+    <p class="msg warn" id="kErr"></p>
+    <div class="row"><button class="btn" id="kSave">${id ? T("Save topic", "Guardar tema") : T("Add topic", "Agregar tema")}</button><button class="btn ghost" id="sBack">${T("Back", "Atrás")}</button></div>
+    ${id ? `<div class="row"><button class="btn ghost" id="kDel">${T("Delete this topic", "Borrar este tema")}</button></div>` : ""}`, { tall: true });
+  bindBack(unitsSheet);
+  const opts = () => ({ title: $("#kTitle").value.trim(), course: c.title, grade: c.grade, notes: $("#kNotes").value.trim(), vocab: $("#kVocab").checked, rem: $("#kRem").checked, formula: $("#kFormula").checked, len: $("#kLen").value });
+  $("#kCopy").addEventListener("click", () => {
+    const o = opts();
+    if (!o.title){ $("#kCopyMsg").className = "msg warn"; $("#kCopyMsg").textContent = T("Type the topic title first.", "Primero escribe el título del tema."); return; }
+    c.pref = { len: o.len, vocab: o.vocab, rem: o.rem, formula: o.formula }; writeCourse();
+    copyText(cheatPrompt(o), $("#kPromptBox"), $("#kCopyMsg"), T("Copied! Paste it into an AI chat.", "¡Copiado! Pégalo en un chat de IA."));
+  });
+  const check = () => {
+    const txt = $("#kSheet").value, msg = $("#kSheetMsg"), prev = $("#kPrev");
+    if (!txt.trim()){ msg.textContent = ""; prev.hidden = true; return; }
+    const s = sheetStats(txt);
+    if (s.s.title && !$("#kTitle").value.trim()) $("#kTitle").value = s.s.title;
+    const bits = [T(`${s.sections} sections`, `${s.sections} secciones`)];
+    if (s.vocab) bits.push(T(`${s.vocab} vocabulary`, `${s.vocab} de vocabulario`));
+    if (s.rem) bits.push(T(`${s.rem} callouts`, `${s.rem} recuadros`));
+    if (s.formula) bits.push(T(`${s.formula} formulas`, `${s.formula} fórmulas`));
+    if (s.ex) bits.push(T(`${s.ex} examples`, `${s.ex} ejemplos`));
+    msg.className = "msg" + (s.marked ? "" : " warn");
+    msg.textContent = T("Cheat sheet ready: ", "Hoja lista: ") + bits.join(", ") + "." + (s.marked ? T(" Preview:", " Vista previa:") : T(" No key words are highlighted yet: ask the AI to wrap key words in **double stars**, or copy its answer with its copy button. Preview:", " Todavía no hay palabras resaltadas: pídele a la IA que ponga las palabras clave entre **dos estrellas**, o copia su respuesta con su botón de copiar. Vista previa:"));
+    prev.innerHTML = (s.s.title ? `<h3 style="font-size:1.4rem;color:var(--text)">${esc(s.s.title)}</h3>` : "") + (s.s.sum ? `<p class="intro">${esc(s.s.sum)}</p>` : "") + sheetHtml(txt, "en");
+    prev.classList.add("card"); prev.hidden = false;
+  };
+  const checkEs = () => {
+    const txt = $("#kEs").value, msg = $("#kEsMsg");
+    if (!txt.trim()){ msg.className = "msg"; msg.textContent = T("No Spanish cheat sheet. Students who choose Español see the English one.", "No hay hoja en español. Los estudiantes que eligen español ven la de inglés."); return; }
+    const s = sheetStats(txt);
+    msg.className = "msg" + (s.sections ? "" : " warn");
+    msg.textContent = s.sections ? T(`Spanish cheat sheet ready: ${s.sections} sections.`, `Hoja en español lista: ${s.sections} secciones.`) : T("This doesn’t look like a cheat sheet yet: it needs # section titles.", "Esto todavía no parece una hoja de estudio: necesita títulos de sección con #.");
+  };
+  $("#kSheet").addEventListener("input", check); smartPaste($("#kSheet"), check);
+  $("#kEs").addEventListener("input", checkEs); smartPaste($("#kEs"), checkEs);
+  check(); checkEs();
+  $("#kEsCopy").addEventListener("click", () => {
+    const txt = $("#kSheet").value.trim();
+    if (!txt){ $("#kEsCopyMsg").className = "msg warn"; $("#kEsCopyMsg").textContent = T("Paste the English cheat sheet first, then translate it.", "Primero pega la hoja en inglés y luego tradúcela."); return; }
+    copyText(esSheetPrompt(txt), $("#kEsPromptBox"), $("#kEsCopyMsg"), T("Copied! Paste it into an AI chat.", "¡Copiado! Pégalo en un chat de IA."));
+  });
+  $("#kSave").addEventListener("click", () => {
+    const sheet = $("#kSheet").value.trim(), s = parseSheet(sheet), title = $("#kTitle").value.trim().slice(0, 80) || s.title.slice(0, 80);
+    const err = $("#kErr");
+    if (!title) return err.textContent = T("Type a topic title.", "Escribe el título del tema.");
+    if (!s.blocks.length) return err.textContent = T("Paste the cheat sheet first.", "Primero pega la hoja de estudio.");
+    const u = c.units.find(x => x.id === $("#kUnit").value);
+    const tid = id || newTopicId(title), es = $("#kEs").value.trim(), se = parseSheet(es);
+    c.topics[tid] = { title, sum: s.sum.slice(0, 240), sheet };
+    if (es) c.topics[tid].es = { title: se.title.slice(0, 80), sum: se.sum.slice(0, 240), sheet: es };
+    c.units.forEach(x => { if (x !== u) x.tp = x.tp.filter(z => z !== tid); });
+    if (!u.tp.includes(tid)) u.tp.push(tid);
+    saved(); unitsSheet();
+  });
+  if (id) armed($("#kDel"), T("Delete this topic", "Borrar este tema"), T("Tap again: deletes the topic and its questions", "Toca otra vez: borra el tema y sus preguntas"), () => {
+    delete c.topics[id]; c.units.forEach(u => { u.tp = u.tp.filter(z => z !== id); }); c.q = c.q.filter(q => q.tp !== id);
+    saved(); unitsSheet();
+  });
+}
+
+/* ---- review questions, written by AI from the cheat sheets ---- */
+function aiPrompt(ids, per){
+  const c = course;
+  return `You are writing multiple-choice review questions for ${c.grade ? c.grade + " " : ""}students in ${c.title ? `a ${c.title} class` : "a class"}. The students' cheat sheet for each topic is at the end of this message. Base every question on those cheat sheets.
+
+Write ${per} questions for EACH of these ${ids.length} topics (${per * ids.length} questions in all):
+${ids.map(id => `- ${id}: ${c.topics[id].title}`).join("\n")}
+
+Rules:
+- Start every question with a Topic line that uses the exact topic label from the list above (the part before the colon).
+- Each question has exactly 4 answer choices (A, B, C, D) and exactly one correct answer.
+- Mix easy, medium, and hard questions. Include some that ask students to apply an idea, not just remember a word. Ask about the vocabulary, "Remember" ideas, and formulas on the cheat sheets.
+- Spread the correct answers evenly across A, B, C, and D.
+- No "all of the above" or "none of the above".
+- Keep questions and choices short enough to read on a phone.
+- After each English question, write the same question in Spanish, with the choices in the SAME order.
+- Use plain text only: no bold, no numbering, no bullet points, no headings, and no extra comments. Put a blank line between questions.
+
+Example of the format (use it for every question):
+
+Topic: ${ids[0]}
+Question: Which process turns liquid water into water vapor?
+A: Condensation
+B: Evaporation
+C: Precipitation
+D: Infiltration
+Answer: B
+Pregunta: ¿Qué proceso convierte el agua líquida en vapor de agua?
+A: Condensación
+B: Evaporación
+C: Precipitación
+D: Infiltración
+
+If you run out of room, stop after a complete question. I will type "continue" and you keep going from where you stopped, in the same format.
+
+CHEAT SHEETS
+${ids.map(id => `=== ${id}: ${c.topics[id].title} ===\n${sheetPlain(c.topics[id].sheet)}`).join("\n\n")}`;
+}
+function questionsSheet(){
+  const c = course, selected = new Set(Object.keys(c.topics).filter(id => !c.q.some(q => q.tp === id)));
+  openSheet(`<h3 id="sheetTitle">${T("Review questions", "Preguntas de repaso")}</h3>
+    <p>${T("The review games use these questions. An AI writes them from your cheat sheets.", "Los juegos de repaso usan estas preguntas. Una IA las escribe a partir de tus hojas de estudio.")}</p>
+    <ol class="steps">
+      <li>${T("Pick the topics and how many questions you want for each.", "Elige los temas y cuántas preguntas quieres para cada uno.")}</li>
+      <li>${T("Tap <b>Copy AI prompt</b> and paste it into an AI chat like ChatGPT, Gemini, or Claude.", "Toca <b>Copiar instrucciones</b> y pégalas en un chat de IA como ChatGPT, Gemini o Claude.")}</li>
+      <li>${T("Copy everything the AI writes, paste it in the box below, and tap <b>Add questions</b>. If the AI stops partway, type “continue” in the chat and paste the next answer in the box too.", "Copia todo lo que escriba la IA, pégalo en el cuadro de abajo y toca <b>Agregar preguntas</b>. Si la IA se detiene, escribe “continue” en el chat y pega también la siguiente respuesta en el cuadro.")}</li>
+    </ol>
+    <span class="field">${T("Topics (the number is how many questions each has now)", "Temas (el número es cuántas preguntas tiene cada uno ahora)")}</span>
+    <div id="cPick"></div>
+    <label class="field" for="cPer">${T("Questions per topic", "Preguntas por tema")}</label>
+    <input class="inp num" id="cPer" type="number" inputmode="numeric" min="1" max="50" value="${c.pref.perTopic || 20}">
+    <div class="row"><button class="btn" id="cCopy">${T("Copy AI prompt", "Copiar instrucciones")}</button></div>
+    <p class="msg" id="cCopyMsg"></p>
+    <textarea class="inp" id="cPromptBox" readonly hidden></textarea>
+    <hr>
+    <label class="field" for="cPaste">${T("Paste the AI’s questions here", "Pega aquí las preguntas de la IA")}</label>
+    <textarea class="inp" id="cPaste" spellcheck="false" placeholder="Topic: …&#10;Question: …&#10;A: …&#10;B: …&#10;C: …&#10;D: …&#10;Answer: B&#10;Pregunta: …&#10;A: …"></textarea>
+    <div class="row"><button class="btn" id="cAdd">${T("Add questions", "Agregar preguntas")}</button></div>
+    <div class="msg" id="cAddMsg"></div>
+    <hr>
+    <p class="small" id="cTotal"></p>
+    <div class="row"><button class="btn ghost" id="cClear">${T("Delete the questions for the picked topics", "Borrar las preguntas de los temas elegidos")}</button></div>
+    ${backRow()}`, { tall: true });
+  bindBack(cogSheet);
+  const drawPick = () => {
+    const box = $("#cPick"), fresh = box.cloneNode(false);
+    box.replaceWith(fresh);
+    fresh.innerHTML = topicPicker(selected, countsBy(c.q), { needQ: false, showCount: true });
+    bindPicker(fresh, selected, () => {
+      $("#cCopy").disabled = !selected.size;
+      const n = c.q.filter(q => selected.has(q.tp)).length;
+      $("#cClear").disabled = !n;
+    });
+    $("#cTotal").textContent = T(`${c.q.length} questions in all.`, `${c.q.length} preguntas en total.`);
+  };
+  drawPick();
+  $("#cCopy").addEventListener("click", () => {
+    const per = Math.min(50, Math.max(1, parseInt($("#cPer").value, 10) || 20));
+    c.pref.perTopic = per; writeCourse();
+    copyText(aiPrompt(topicsInOrder(selected), per), $("#cPromptBox"), $("#cCopyMsg"), T("Copied! Paste it into an AI chat.", "¡Copiado! Pégalo en un chat de IA."));
+  });
+  $("#cAdd").addEventListener("click", () => {
+    const r = parseBank($("#cPaste").value), seen = new Set(c.q.map(qKey)), fresh = [];
+    let dup = 0;
+    r.questions.forEach(q => { const k = qKey(q); if (seen.has(k)) dup++; else { seen.add(k); fresh.push(q); } });
+    const noEs = fresh.filter(q => !q.es).length;
+    c.q = c.q.concat(fresh); saved();
+    const per = countsBy(fresh), msg = $("#cAddMsg");
+    let html = fresh.length ? `<b>${T(`Added ${fresh.length} questions.`, `Se agregaron ${fresh.length} preguntas.`)}</b><ul>${topicsInOrder(new Set(Object.keys(per))).map(id => `<li>${esc(cardTitle(id))}: +${per[id]}</li>`).join("")}</ul>` : `<b>${T("No new questions were added.", "No se agregaron preguntas nuevas.")}</b>`;
+    const warn = [];
+    if (dup) warn.push(T(`${dup} skipped because they were already saved.`, `${dup} omitidas porque ya estaban guardadas.`));
+    if (noEs) warn.push(T(`${noEs} have no Spanish version, so they show in English for everyone.`, `${noEs} no tienen versión en español, así que salen en inglés.`));
+    if (r.unknown.length) warn.push(T("These Topic labels don’t match a topic, so their questions were skipped: ", "Estas etiquetas de Topic no coinciden con ningún tema, así que se omitieron sus preguntas: ") + r.unknown.map(esc).join(", "));
+    if (r.problems.length) warn.push(T(`${r.problems.length} couldn’t be read (each needs a question, A–D choices, and an Answer: letter):`, `${r.problems.length} no se pudieron leer (cada una necesita la pregunta, opciones A–D y una línea Answer:):`) + `<ul>${r.problems.slice(0, 5).map(x => `<li>${esc(x)}</li>`).join("")}</ul>`);
+    if (warn.length) html += `<div class="msg warn">${warn.map(w => `<p style="margin:0 0 6px">${w}</p>`).join("")}</div>`;
+    msg.className = "msg" + (fresh.length ? "" : " warn"); msg.innerHTML = html;
+    if (fresh.length && !r.problems.length && !r.unknown.length) $("#cPaste").value = "";
+    drawPick();
+  });
+  armed($("#cClear"), T("Delete the questions for the picked topics", "Borrar las preguntas de los temas elegidos"), T("Tap again to delete them", "Toca otra vez para borrarlas"), () => {
+    const n = c.q.filter(q => selected.has(q.tp)).length;
+    c.q = c.q.filter(q => !selected.has(q.tp)); saved();
+    $("#cClear").textContent = T("Delete the questions for the picked topics", "Borrar las preguntas de los temas elegidos");
+    $("#cAddMsg").className = "msg"; $("#cAddMsg").textContent = T(`Deleted ${n} questions.`, `Se borraron ${n} preguntas.`);
+    drawPick();
+  });
+}
+
+/* ---- backup file ---- */
+function backupSheet(){
+  openSheet(`<h3 id="sheetTitle">${T("Backup", "Copia de seguridad")}</h3>
+    <p>${T("Your notebook lives in this browser only. Save a backup file now and then, and use it to move your notebook to another computer.", "Tu cuaderno vive solo en este navegador. Guarda una copia de vez en cuando, y úsala para pasar tu cuaderno a otra computadora.")}</p>
+    <div class="row"><button class="btn" id="bSave">${T("Save backup file", "Guardar copia")}</button></div>
+    <hr>
+    <label class="field" for="bFile">${T("Load a backup file (replaces what’s here now)", "Cargar una copia (reemplaza lo que hay ahora)")}</label>
+    <input type="file" id="bFile" accept=".json,application/json" class="inp">
+    <p class="msg" id="bMsg"></p>
+    ${backRow()}`, { tall: true });
+  bindBack(cogSheet);
+  $("#bSave").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(course, null, 1)], { type: "application/json" }), a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = slug(course.title || "class") + "-notebook-backup.json";
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    $("#bMsg").className = "msg"; $("#bMsg").textContent = T("Backup saved to your downloads.", "Copia guardada en tus descargas.");
+  });
+  $("#bFile").addEventListener("change", e => {
+    const f = e.target.files[0], msg = $("#bMsg"); if (!f) return;
+    f.text().then(txt => {
+      let d = null; try { d = checkCourse(JSON.parse(txt)); } catch(err){}
+      if (!d){ msg.className = "msg warn"; msg.textContent = T("That file isn’t a notebook backup.", "Ese archivo no es una copia del cuaderno."); return; }
+      const n = Object.keys(d.topics).length;
+      if (!confirm(T(`Replace this notebook with “${d.title || "the backup"}” (${d.units.length} units, ${n} topics, ${d.q.length} questions)?`, `¿Reemplazar este cuaderno con “${d.title || "la copia"}” (${d.units.length} unidades, ${n} temas, ${d.q.length} preguntas)?`))) return;
+      course = d; saved();
+      msg.className = "msg"; msg.textContent = T("Backup loaded.", "Copia cargada.");
+    });
+  });
+}
+
+/* =========================================================
+   CLASS LINK  (made from the cog)
+   The link carries the course itself (title page, chosen topics with their
+   cheat sheets, and their questions), like Quiz Quest's solo practice
+   link, so there's no server. The student's device keeps the class link
+   (and hides the cog) until they open a different class link. To get the
+   cog back on a device, open the notebook with #teacher at the end of its
+   address.
+   ========================================================= */
+/* link text: "z" + deflated JSON, or "j" + plain JSON where the browser can't compress; both base64url */
+function b64url(bytes){
+  let bin = "";
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function unb64url(t){
+  t = t.replace(/-/g, "+").replace(/_/g, "/");
+  while (t.length % 4) t += "=";
+  const bin = atob(t), out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+function packLink(obj, cb){
+  const bytes = new TextEncoder().encode(JSON.stringify(obj));
+  if (!window.CompressionStream) return cb("j" + b64url(bytes));
+  new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream("deflate-raw"))).arrayBuffer()
+    .then(buf => cb("z" + b64url(new Uint8Array(buf))), () => cb("j" + b64url(bytes)));
+}
+function unpackLink(t, cb){
+  try {
+    const bytes = unb64url(t.slice(1));
+    if (t[0] === "j") return cb(JSON.parse(new TextDecoder().decode(bytes)));
+    if (t[0] !== "z" || !window.DecompressionStream) return cb(null);
+    new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).text()
+      .then(txt => { try { cb(JSON.parse(txt)); } catch(e){ cb(null); } }, () => cb(null));
+  } catch(e){ cb(null); }
+}
+
+function linkSheet(){
+  const c = course, counts = countsBy(c.q), selected = new Set(Object.keys(c.topics)), games = new Set(GAMES);
+  const gName = s => UI[s][LANG === "es" ? 1 : 0];
+  openSheet(`<h3 id="sheetTitle">${T("Make a class link", "Hacer un enlace de clase")}</h3>
+    <p>${T("Students who open this link get your title page and theme, the topics you pick here with their cheat sheets, and the games. Post it on Canvas or your class website. Their device remembers it and hides the cog until they open a different class link.</p><p class=\"small\">Testing it yourself? Open it in a private window. If you open it on this device, the cog disappears here too: go to the notebook's address with <b>#teacher</b> at the end to get it back. Changed something? Make a new link and post it again.", "Los estudiantes que abran este enlace reciben tu portada y tema, los temas que elijas aquí con sus hojas de estudio, y los juegos. Publícalo en Canvas o en el sitio web de tu clase. Su aparato lo recuerda y esconde el engranaje hasta que abran otro enlace de clase.</p><p class=\"small\">¿Lo quieres probar? Ábrelo en una ventana privada. Si lo abres en este aparato, el engranaje también desaparece aquí: ve a la dirección del cuaderno con <b>#teacher</b> al final para recuperarlo. ¿Cambiaste algo? Haz un enlace nuevo y publícalo otra vez.")}</p>
+    <label class="field" for="lName">${T("Banner on the title page (optional)", "Aviso en la portada (opcional)")}</label>
+    <input class="inp" id="lName" maxlength="40" placeholder="${T("Unit 2 test review", "Repaso del examen 2")}">
+    <span class="field">${T("Topics students can open (the number is how many questions each has)", "Temas que pueden abrir (el número es cuántas preguntas tiene cada uno)")}</span>
+    <div id="lPick">${topicPicker(selected, counts, { needQ: false, showCount: true })}</div>
+    <span class="field">${T("Games students can play", "Juegos que pueden jugar")}</span>
+    <div class="tchips" id="lGames">${GAMES.map(s => `<button type="button" class="tchip" data-g="${s}" aria-pressed="true">${esc(gName(s))}</button>`).join("")}</div>
+    <div class="row"><button class="btn" id="lMake">${T("Make link", "Hacer enlace")}</button><button class="btn ghost" id="lCopy" hidden>${T("Copy link", "Copiar enlace")}</button></div>
+    <div class="msg" id="lMsg"></div>
+    <textarea class="inp link" id="lLink" readonly hidden></textarea>
+    ${backRow()}`, { tall: true });
+  bindBack(cogSheet);
+  const stale = () => { $("#lLink").hidden = true; $("#lCopy").hidden = true; $("#lMsg").innerHTML = ""; };
+  bindPicker($("#lPick"), selected, stale);
+  $("#lGames").addEventListener("click", e => {
+    const b = e.target.closest(".tchip"); if (!b) return;
+    const s = b.dataset.g;
+    if (games.has(s)) games.delete(s); else games.add(s);
+    b.setAttribute("aria-pressed", games.has(s)); stale();
+  });
+  $("#lName").addEventListener("input", stale);
+  $("#lMake").addEventListener("click", () => {
+    const msg = $("#lMsg"), warn = t => { msg.className = "msg warn"; msg.innerHTML = t; };
+    stale();
+    if (!selected.size) return warn(T("Pick at least one topic.", "Elige por lo menos un tema."));
+    const units = c.units.map(u => ({ id: u.id, name: u.name, tp: u.tp.filter(id => selected.has(id)) })).filter(u => u.tp.length);
+    const topics = {}; units.forEach(u => u.tp.forEach(id => { topics[id] = c.topics[id]; }));
+    const q = c.q.filter(x => selected.has(x.tp)), g = GAMES.filter(s => games.has(s));
+    const notes = [];
+    if (g.length && q.length < 3) notes.push(T("These topics have fewer than 3 review questions, so the games won’t show up. Add questions in the cog’s <b>Review questions</b>.", "Estos temas tienen menos de 3 preguntas de repaso, así que los juegos no saldrán. Agrega preguntas en <b>Preguntas de repaso</b> del engranaje."));
+    const obj = { v: 1, t: $("#lName").value.trim().slice(0, 40), g, c: { v: 1, title: c.title, teacher: c.teacher, theme: c.theme, grade: c.grade, units, topics, q } };
+    packLink(obj, code => {
+      const url = location.href.split("#")[0] + "#class=" + code, box = $("#lLink");
+      box.value = url; box.hidden = false; $("#lCopy").hidden = false;
+      if (!/^https?:$/.test(location.protocol)) notes.push(T("This notebook is open from a file on this device, so the link won’t work for students. Open the notebook from your website first, then make the link.", "Este cuaderno está abierto desde un archivo en este aparato, así que el enlace no funcionará para los estudiantes. Abre el cuaderno desde tu sitio web y luego haz el enlace."));
+      else if (url.length > 8000) notes.push(T(`This link is long (${url.length.toLocaleString()} characters) because it carries your cheat sheets and questions. It works as a link on Canvas or a website, but email or text apps may cut it off. For a shorter link, pick fewer topics (one unit at a time works well).`, `Este enlace es largo (${url.length.toLocaleString()} caracteres) porque lleva tus hojas de estudio y preguntas. Funciona como enlace en Canvas o en un sitio web, pero el correo o los mensajes de texto pueden cortarlo. Para un enlace más corto, elige menos temas (una unidad a la vez funciona bien).`));
+      msg.className = "msg";
+      msg.innerHTML = `<b>${T("Link ready:", "Enlace listo:")}</b> ${T(`${Object.keys(topics).length} ${Object.keys(topics).length === 1 ? "topic" : "topics"}, ${g.length} ${g.length === 1 ? "game" : "games"}, ${q.length} questions.`, `${Object.keys(topics).length} ${Object.keys(topics).length === 1 ? "tema" : "temas"}, ${g.length} ${g.length === 1 ? "juego" : "juegos"}, ${q.length} preguntas.`)}` +
+        (notes.length ? `<div class="msg warn">${notes.map(n => `<p style="margin:0 0 6px">${n}</p>`).join("")}</div>` : "");
+    });
+  });
+  $("#lCopy").addEventListener("click", () => {
+    const box = $("#lLink"), b = $("#lCopy"), done = () => { b.textContent = T("Copied!", "¡Copiado!"); setTimeout(() => { b.textContent = T("Copy link", "Copiar enlace"); }, 2000); };
+    const fallback = () => { box.focus(); box.select(); b.textContent = T("Copy the selected link", "Copia el enlace seleccionado"); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(box.value).then(done, fallback); else fallback();
+  });
+}
+
+/* =========================================================
+   WIRING + START
+   ========================================================= */
+const sel = $("#unit"), openBtn = $("#openU");
+sel.addEventListener("change", () => { openBtn.disabled = !sel.value; });
+openBtn.addEventListener("click", () => {
+  const u = sel.value; if (!u) return;
+  save.lastUnit = u; writeSave();
+  go(u);
+});
+$("#saveCheckBtn").addEventListener("click", saveCheck);
+$("#profileBtn").addEventListener("click", () => profileSheet(false));
+$("#cogBtn").addEventListener("click", cogSheet);
+const gameSel = $("#game"), playBtn = $("#playG");
+gameSel.addEventListener("change", () => { playBtn.disabled = !gameSel.value; if (gameSel.value) gameSheet(gameSel.value); });
+playBtn.addEventListener("click", () => { if (gameSel.value) gameSheet(gameSel.value); });
+document.addEventListener("click", e => {
+  const card = e.target.closest("[data-card]");
+  if (card) return go(currentU + "/" + card.dataset.card);
+  const back = e.target.closest("[data-go]");
+  if (back) return go(back.dataset.go);
+});
+$("#nextBtn").addEventListener("click", () => {
+  if (currentCard) markDone(currentU + "." + currentCard);
+  const order = getOrder(currentU), next = order[order.indexOf(currentCard) + 1];
+  go(next ? currentU + "/" + next : currentU);
+});
+window.addEventListener("hashchange", route);
+
+applyUI();
+renderMeLine();
+loadClass();
+(function start(){
+  const m = location.hash.match(/^#class=(.+)$/);
+  const ready = bad => {
+    route();
+    if (CLASS && !save.profile) profileSheet(true);
+    else if (bad) openSheet(`<h3 id="sheetTitle">${T("Link not working", "El enlace no funciona")}</h3><p>${T("This class link didn’t open. It may have been cut off when it was copied. Ask your teacher for the link again.", "Este enlace de clase no se abrió. Puede que se haya cortado al copiarlo. Pídele el enlace otra vez a tu maestro.")}</p><div class="row"><button class="btn" data-close>OK</button></div>`);
+  };
+  if (location.hash === "#teacher"){   // teacher's way out of a class link on their own device
+    try { localStorage.removeItem(CLASS_KEY); } catch(e){}
+    CLASS = null; history.replaceState(null, "", location.href.split("#")[0]);
+  }
+  if (!m) return ready(false);
+  unpackLink(m[1], d => {
+    const c = checkClass(d);
+    if (c){ CLASS = c; try { localStorage.setItem(CLASS_KEY, JSON.stringify(c)); } catch(e){} }
+    history.replaceState(null, "", location.href.split("#")[0]);
+    ready(!c);
+  });
+})();
+</script>
+</body>
+</html>
