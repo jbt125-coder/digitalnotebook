@@ -292,12 +292,12 @@ let storageOK = true;
 /* =========================================================
    SAVE SYSTEM  (student side)
    ========================================================= */
-function blankSave(){ return { v: SAVE_VERSION, items: {}, order: {}, lastUnit: "", saveTest: 0, profile: null, game: {} }; }
+function blankSave(){ return { v: SAVE_VERSION, items: {}, order: {}, lastUnit: "", saveTest: 0, profile: null, game: {}, plays: 0 }; }
 function migrate(d){
   if (!d || typeof d !== "object") return blankSave();
   d.items = d.items || {}; d.order = d.order || {};
   d.lastUnit = d.lastUnit || ""; d.saveTest = d.saveTest || 0;
-  d.profile = d.profile || null; d.game = d.game || {};
+  d.profile = d.profile || null; d.game = d.game || {}; d.plays = d.plays || 0;
   d.v = SAVE_VERSION;
   return d;
 }
@@ -1252,6 +1252,35 @@ function bindPicker(root, selected, onChange){
 function topicsInOrder(selected){ return C().units.flatMap(u => u.tp).filter(id => selected.has(id)); }
 
 /* =========================================================
+   GOLDEN QUESTIONS  (a hidden easter egg)
+   Every 3rd game a student starts, one of these slips into the game
+   once, as the 2nd to 4th question, with the question in gold and the
+   choices left in order. They take turns, one per 3 games.
+   ========================================================= */
+const GOLDEN = [
+  { q: "What is a way to prove to your teacher that you are awesome?",
+    c: ["Donate a box of tissues to the classroom", "Donate a bag of Jolly Ranchers to the class", "Give them a $5 gift card for the holidays", "All of these are correct"],
+    es: { q: "¿Cuál es una manera de demostrarle a tu maestro que eres increíble?",
+      c: ["Donar una caja de pañuelos desechables para el salón", "Donar una bolsa de Jolly Ranchers para la clase", "Regalarle una tarjeta de regalo de $5 para las fiestas", "Todas estas respuestas son correctas"] } },
+  { q: "What is the fastest way to become your teacher's favorite student for at least five minutes?",
+    c: ["Turn in an assignment before the deadline", "Tell them their lesson was actually helpful", "Help clean up the classroom without being asked", "All of these are correct"],
+    es: { q: "¿Cuál es la manera más rápida de convertirte en el estudiante favorito de tu maestro durante al menos cinco minutos?",
+      c: ["Entregar una tarea antes de la fecha límite", "Decirle que su lección realmente fue útil", "Ayudar a limpiar el salón sin que te lo pidan", "Todas estas respuestas son correctas"] } },
+  { q: "What classroom supply could make your teacher happier than finding $20 in an old jacket?",
+    c: ["A fresh box of tissues", "A bottle of their favorite soda", "A bottle of hand sanitizer", "All of these are correct"],
+    es: { q: "¿Qué material escolar podría hacer más feliz a tu maestro que encontrar $20 en una chaqueta vieja?",
+      c: ["Una caja nueva de pañuelos desechables", "Un marcador para pizarra que funcione", "Una botella de su soda favorita", "Todas estas respuestas son correctas"] } },
+  { q: "What is a surprisingly powerful way to make your teacher's day better?",
+    c: ["Say \"thank you\" after getting help", "Put your phone away and participate", "Encourage a classmate who is struggling", "All of these are correct"],
+    es: { q: "¿Cuál es una manera sorprendentemente poderosa de mejorar el día de tu maestro?",
+      c: ["Decir «gracias» después de recibir ayuda", "Guardar el teléfono y participar en clase", "Animar a un compañero que tiene dificultades", "Todas estas respuestas son correctas"] } },
+  { q: "What gift would make a teacher think, \"This student truly understands me\"?",
+    c: ["A coffee or tea gift card", "A class that cleans up after an activity", "Students who read the directions before asking what to do", "All of these are correct"],
+    es: { q: "¿Qué regalo haría que un maestro pensara: «Este estudiante realmente me entiende»?",
+      c: ["Una tarjeta de regalo para café o té", "Una clase que limpia después de una actividad", "Estudiantes que leen las instrucciones antes de preguntar qué deben hacer", "Todas estas respuestas son correctas"] } }
+].map(g => Object.assign({ tp: "teacher-appreciation", a: 3, gold: 1 }, g));
+
+/* =========================================================
    REVIEW GAMES  (the games live in games.html, paint.html, ...)
    ========================================================= */
 function gameSheet(sport){
@@ -1281,6 +1310,7 @@ function gameSheet(sport){
   $("#gGo").addEventListener("click", () => {
     const mins = Math.min(60, Math.max(1, parseInt($("#gMins").value, 10) || 5));
     const ids = topicsInOrder(selected);
+    save.plays = (save.plays || 0) + 1;
     save.game = Object.assign(save.game || {}, { mins, topics: ids }); writeSave();
     const p = save.profile || {};
     const data = {
@@ -1288,6 +1318,7 @@ function gameSheet(sport){
       topics: ids.map(id => ({ id, name: cardTitle(id) })),
       q: allQuestions().filter(q => ids.includes(q.tp))
     };
+    if (save.plays % 3 === 0){ data.gold = GOLDEN[(save.plays / 3 - 1) % GOLDEN.length]; data.goldAt = 2 + Math.floor(Math.random() * 3); }
     try { localStorage.setItem(LAUNCH_KEY, JSON.stringify(data)); }
     catch(e){ $("#gMsg").className = "msg warn"; $("#gMsg").textContent = T("This browser won’t let the game start. Try Safari or Chrome.", "Este navegador no deja empezar el juego. Prueba Safari o Chrome."); return; }
     location.href = sport === "paint" ? "paint.html#ess" : sport === "snake" ? "snake.html#ess" : sport === "blasteroids" ? "blasteroids.html#ess" : sport === "zombie" ? "zombie.html#ess" : "games.html#ess";

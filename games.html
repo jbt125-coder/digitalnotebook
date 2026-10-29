@@ -217,6 +217,8 @@ body.land #pStage { flex: 1; }
 #oCard .ocBig { font-family: "Press Start 2P", monospace; font-size: 15px; margin-top: 10px; }
 #oCard .ocPct { font-family: "Press Start 2P", monospace; font-size: 34px; color: #1f9a50; margin: 6px 0 8px; }
 #oCard .ocDate { font-size: 13px; color: #5a4a8a; margin-top: 6px; }
+#oCard .ocCredit { font-size: 12px; color: #5a4a8a; margin-top: 6px; line-height: 1.45; opacity: .85; }
+.qBox.goldq { color: #FFD24A; background: #1a1206; border-color: #FFD24A; text-shadow: 0 0 10px rgba(255,200,40,.55); }
 #oCard .ocTbl { width: 100%; border-collapse: collapse; margin: 8px 0 4px; font-size: 14px; text-align: left; }
 #oCard .ocTbl th { font-size: 11px; font-weight: 800; color: #4a3696; padding: 4px 6px; border-bottom: 2px solid #1b1040; }
 #oCard .ocTbl td { padding: 5px 6px; border-bottom: 1px solid #e0d6c0; font-variant-numeric: tabular-nums; }
@@ -677,7 +679,7 @@ var ES = {
   'Take a screenshot of your score card!': '¡Toma una captura de pantalla de tu tarjeta de puntaje!',
   '← NOTEBOOK': '← CUADERNO', 'EXIT': 'SALIR', 'PLAYED': 'JUGASTE', 'OF': 'DE',
   'End the game now and see your score card?': '¿Terminar el juego ahora y ver tu tarjeta de puntaje?',
-  'BASKETBALL REVIEW': 'REPASO DE BALONCESTO', 'HOME RUN DERBY REVIEW': 'REPASO DE JONRONES', 'Class Notebook': 'Cuaderno de clase',
+  'BASKETBALL REVIEW': 'REPASO DE BALONCESTO', 'HOME RUN DERBY REVIEW': 'REPASO DE JONRONES', 'Class Notebook': 'Cuaderno de clase', 'Created by Mr. Tyler using Claude.': 'Creado por Mr. Tyler con Claude.', 'YouTube Channel: YourDadAcademy': 'Canal de YouTube: YourDadAcademy',
   'SHORT HAIR': 'PELO CORTO', 'CAP': 'GORRA', 'BACKWARDS CAP': 'GORRA AL REVÉS', 'BEANIE': 'GORRO', 'AFRO': 'AFRO', 'SPIKY HAIR': 'PELO PARADO',
   'HEADBAND': 'CINTA', 'CROWN': 'CORONA', 'BOW': 'MOÑO', 'MOHAWK': 'CRESTA', 'LONG HAIR': 'PELO LARGO', 'PONYTAIL': 'COLA DE CABALLO', 'PIGTAILS': 'DOS COLITAS'
 };
@@ -2463,7 +2465,7 @@ function soloOver(){
   overCard(S.sc, newBest ? L('NEW PERSONAL BEST!') : L('BEST') + ' ' + best);
 }
 /* ---------- review game from the class notebook ---------- */
-var ESS = null;
+var ESS = null, GOLD = null, GOLD_AT = 0, goldAsked = 0;
 function essInit(){
   var d = load(ESS_LAUNCH);
   // the notebook already knows the name, period and language, so the first card (password, name) is not needed
@@ -2478,6 +2480,7 @@ function essInit(){
     $('jErr').textContent = L('Go back to the notebook and pick the topics to review.');
     return;
   }
+  GOLD = d.gold && typeof d.gold.q === 'string' && Array.isArray(d.gold.c) && d.gold.c.length > 1 ? d.gold : null; GOLD_AT = Math.max(1, d.goldAt | 0);
   ESS = { course: String(d.course || ''), name: String(d.name || ''), first: String(d.first || ''), per: String(d.per || ''), topics: d.topics || [] };
   SOLO = { t: '', q: d.q, n: '', ne: '', m: clamp(d.m | 0 || 5, 1, 60), h: false, s: d.s === 'derby' ? 'derby' : 'hoops' };
   setStuSport(SOLO.s);
@@ -2530,7 +2533,8 @@ function essCard(sc){
     '<div class="ocLine">' + L('PLAYED') + ' ' + fmt(Math.min(SOLO.m * 60, stu.solo.played || 0)) + ' ' + L('OF') + ' ' + SOLO.m + ' MIN</div>' +
     '<table class="ocTbl"><tr><th>' + L('Topic') + '</th><th class="n">' + L('Right') + '</th><th class="n">%</th></tr>' + rows + '</table>' +
     '<div class="ocDate">' + esc(ESS.course || L('Class Notebook')) + ', ' + d.toLocaleDateString(es ? 'es' : [], { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' +
-    d.toLocaleTimeString(es ? 'es' : [], { hour: 'numeric', minute: '2-digit' }) + '</div>';
+    d.toLocaleTimeString(es ? 'es' : [], { hour: 'numeric', minute: '2-digit' }) + '</div>' +
+    '<div class="ocCredit">' + L('Created by Mr. Tyler using Claude.') + '<br>' + L('YouTube Channel: YourDadAcademy') + '</div>';
 }
 function buildSwatches(id, cols, field){
   var box = $(id); box.innerHTML = '';
@@ -2729,7 +2733,8 @@ function overCard(sc, place){
     '<div class="ocPct">' + pct + '%</div>' +
     '<div class="ocLine">' + L('SCORE') + ' ' + sc + (place ? '<br>' + L(place) : '') + '</div>' +
     '<div class="ocDate">' + (stu.solo ? L('Solo practice') + ', ' : '') + d.toLocaleDateString(stu.lang === 'es' ? 'es' : [], { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' +
-    d.toLocaleTimeString(stu.lang === 'es' ? 'es' : [], { hour: 'numeric', minute: '2-digit' }) + '</div>';
+    d.toLocaleTimeString(stu.lang === 'es' ? 'es' : [], { hour: 'numeric', minute: '2-digit' }) + '</div>' +
+    '<div class="ocCredit">' + L('Created by Mr. Tyler using Claude.') + '<br>' + L('YouTube Channel: YourDadAcademy') + '</div>';
 }
 function showOver(d){
   stu.mode = 'over';
@@ -2796,12 +2801,14 @@ function showQuestion(){
   $('qNext').style.display = 'none';
   var box = $('qChoices'); box.innerHTML = '';
   if (!stu.bank.length){ $('qText').textContent = L('Waiting for questions from your teacher.'); return; }
-  var q = stu.bank[drawIdx()], order = [], i;
+  // the notebook's hidden golden question: on every 3rd game it slips in once, as the 2nd-4th question
+  goldAsked++;
+  var q = ESS && GOLD && !GOLD.used && goldAsked >= GOLD_AT ? (GOLD.used = 1, GOLD) : stu.bank[drawIdx()], order = [], i;
   for (i = 0; i < q.c.length; i++) order.push(i);
-  shuffle(order);
+  if (!q.gold) shuffle(order);
   var shown = stu.lang === 'es' && q.es ? q.es : q;
   curQ = { q: q, shown: shown, order: order, done: false };
-  $('qText').textContent = cleanText(shown.q);
+  $('qText').textContent = (q.gold ? '★ ' : '') + cleanText(shown.q); $('qText').classList.toggle('goldq', !!q.gold);
   for (i = 0; i < order.length; i++){
     var b = document.createElement('button');
     b.type = 'button'; b.className = 'ch'; b.setAttribute('data-k', i);
