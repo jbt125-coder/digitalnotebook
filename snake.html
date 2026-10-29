@@ -79,6 +79,8 @@ a.back { color:#6a8f99; font-size:11px; letter-spacing:2px; margin-top:24px; tex
 .shot { color:#aaa; font:14px/1.4 system-ui,sans-serif; margin-bottom:18px; text-align:center; }
 #progressBar { position:relative; z-index:10; width:calc(100% - 32px); height:3px; background:rgba(255,255,255,0.08); border-radius:2px; margin:6px 16px 4px; overflow:hidden; flex-shrink:0; }
 #progressFill { height:100%; border-radius:2px; transition:width 0.3s ease, background 0.8s; width:0%; background:#555; }
+.goldq{color:#FFD24A!important;background:#1a1206!important;border-radius:10px;padding:10px 12px;text-shadow:0 0 10px rgba(255,200,40,.55);box-shadow:0 0 0 2px #FFD24A}
+.scard .scCredit{font-size:.72rem;opacity:.8;margin-top:8px;line-height:1.45}
 </style>
 </head>
 <body>
@@ -157,7 +159,7 @@ a.back { color:#6a8f99; font-size:11px; letter-spacing:2px; margin-top:24px; tex
 // ============================================================
 // NOTEBOOK REVIEW: questions come from the class notebook
 // ============================================================
-var COURSE="";
+var COURSE="", GOLD=null, GOLD_AT=0, goldAsked=0;
 const ESS_LAUNCH='digitalNotebook.launch', NEED_RIGHT=3;
 let ESS=null, LANG='en';
 let tripRight=0, qRight=0, qTotal=0, tpStats={}, deck=[], lastQ=-1, curQ=null, quizDone=null;
@@ -273,6 +275,7 @@ function essInit(){
   let d=null;
   try{ d=JSON.parse(localStorage.getItem(ESS_LAUNCH)); }catch(e){}
   COURSE=d&&d.course?String(d.course).slice(0,60):"";
+  GOLD=d&&d.gold&&typeof d.gold.q==="string"&&Array.isArray(d.gold.c)&&d.gold.c.length>1?d.gold:null; GOLD_AT=Math.max(1,(d&&d.goldAt)|0);
   LANG=d&&d.lang==='es'?'es':'en';
   document.documentElement.lang=LANG;
   document.querySelectorAll('[data-t]').forEach(el=>{ const v=TX[el.dataset.t]; if(v) el.textContent=v[LANG==='es'?1:0]; });
@@ -313,14 +316,16 @@ function renderDots(){
   for(let i=0;i<NEED_RIGHT;i++) h+='<span'+(i<tripRight?' class="on"':'')+'>★</span>';
   $('qDots').innerHTML=h;
 }
+// the notebook's hidden golden question: on every 3rd game it slips in once, as the 2nd-4th question
+function nextQ(){ goldAsked++; if(GOLD&&!GOLD.used&&goldAsked>=GOLD_AT){ GOLD.used=1; return GOLD; } return ESS.q[drawIdx()]; }
 function showQuestion(){
   renderDots();
   const fb=$('qFb'); fb.textContent=''; fb.className='';
   $('qGo').style.display='none'; $('qNext').style.display='none';
-  const q=ESS.q[drawIdx()], order=shuffle(q.c.map((_,i)=>i));
+  const q=nextQ(), order=q.gold?q.c.map((_,i)=>i):shuffle(q.c.map((_,i)=>i));
   const shown=LANG==='es'&&q.es?q.es:q;
   curQ={q,shown,order,done:false};
-  $('qText').textContent=cleanText(shown.q);
+  $('qText').textContent=(q.gold?'★ ':'')+cleanText(shown.q); $('qText').classList.toggle('goldq',!!q.gold);
   const box=$('qChoices'); box.innerHTML='';
   order.forEach((ci,k)=>{
     const b=document.createElement('button');
@@ -420,7 +425,8 @@ function scoreCard(){
       (best.round>1?' ('+T('loop','vuelta')+' '+best.round+')':'')+' · '+runs+' '+T(runs===1?'run':'runs',runs===1?'partida':'partidas')+'</div>'+
     '<table><tr><th>'+T('Topic','Tema')+'</th><th class="n">'+T('Right','Bien')+'</th><th class="n">%</th></tr>'+rows+'</table>'+
     '<div class="scDate">'+(COURSE?esc(COURSE):T('Class Notebook','Cuaderno de clase'))+', '+
-    d.toLocaleDateString(es?'es':[],{month:'short',day:'numeric',year:'numeric'})+' '+d.toLocaleTimeString(es?'es':[],{hour:'numeric',minute:'2-digit'})+'</div>';
+    d.toLocaleDateString(es?'es':[],{month:'short',day:'numeric',year:'numeric'})+' '+d.toLocaleTimeString(es?'es':[],{hour:'numeric',minute:'2-digit'})+'</div>'+
+    '<div class="scCredit">'+T('Created by Mr. Tyler using Claude.','Creado por Mr. Tyler con Claude.')+'<br>'+T('YouTube Channel: YourDadAcademy','Canal de YouTube: YourDadAcademy')+'</div>';
 }
 
 // ============================================================
