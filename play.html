@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#141b26">
+<title>Review Game</title>
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; min-height: 100%; background: #141b26; color: #f4f6f8; font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+main { max-width: 420px; margin: 0 auto; padding: 28px 18px 40px; text-align: center; }
+.icon { font-size: 56px; line-height: 1.1; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+h1 { font-size: 26px; margin: 8px 0 2px; }
+.sub { color: #9fb0c4; font-size: 14px; margin: 0 0 22px; }
+.lab { display: block; text-align: left; font-size: 13px; font-weight: 700; color: #7fd8c6; margin: 16px 0 6px; letter-spacing: .5px; }
+.seg { display: flex; gap: 10px; }
+.seg button { flex: 1; padding: 14px 8px; border-radius: 12px; border: 2px solid #2f3d52; background: #1d2736; color: #e6ebf1; font-family: inherit; font-size: 18px; font-weight: 700; cursor: pointer; }
+.seg button[aria-pressed="true"] { border-color: #1f8f7d; background: #173a37; color: #fff; }
+input { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #2f3d52; background: #1d2736; color: #fff; font-family: inherit; font-size: 17px; }
+input:focus { outline: none; border-color: #1f8f7d; }
+.row2 { display: flex; gap: 10px; }
+.row2 > div { flex: 1; }
+.go { display: block; width: 100%; margin-top: 26px; padding: 16px; border: none; border-radius: 12px; background: #f8b800; color: #141b26; font-family: inherit; font-size: 20px; font-weight: 900; letter-spacing: 1px; cursor: pointer; }
+.go:disabled { opacity: .5; cursor: default; }
+.err { color: #ffb347; margin-top: 18px; }
+.hidden { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <div class="icon" id="icon">🎮</div>
+  <h1 id="title">Review Game</h1>
+  <p class="sub" id="sub"></p>
+  <div id="form" class="hidden">
+    <div id="langBox">
+      <span class="lab" id="lLang">Language / Idioma</span>
+      <div class="seg" id="lang"><button type="button" data-v="en" aria-pressed="true">English</button><button type="button" data-v="es" aria-pressed="false">Español</button></div>
+    </div>
+    <div class="row2">
+      <div><label class="lab" for="name" id="lName">Your name (optional)</label><input id="name" maxlength="40" autocomplete="name"></div>
+      <div style="flex:.55"><label class="lab" for="per" id="lPer">Period</label><input id="per" maxlength="12" inputmode="numeric" autocomplete="off"></div>
+    </div>
+    <button type="button" class="go" id="go">PLAY</button>
+  </div>
+  <p class="err" id="err"></p>
+</main>
+<script>
+/* A review game assigned by link (teacherbase makes the link and its QR code).
+   The address ends with #play=<code>: the game, its questions in English and
+   Spanish, and the game length, deflated and written in the 43 characters a QR
+   code stores most compactly (0-9 A-Z $ * + - . / :). The student picks a
+   language here, then the game starts the same way it does from the notebook.
+   Assigned games don't give coins or trophies (see "link" in rewards.js). */
+(function(){
+  var LAUNCH = 'digitalNotebook.launch';
+  var B43 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ$*+-./:';
+  var GAMES = {
+    hoops: { icon: '🏀', name: ['Palm Court Hoops', 'Palm Court Hoops'], page: 'games.html#ess' },
+    derby: { icon: '⚾', name: ['Home Run Derby', 'Derby de jonrones'], page: 'games.html#ess' },
+    zombie: { icon: '🧟', name: ['Zombie Horde', 'La horda zombi'], page: 'zombie.html#ess' },
+    snake: { icon: '🐍', name: ['Snake', 'La serpiente'], page: 'snake.html#ess' },
+    blasteroids: { icon: '🚀', name: ['Blasteroids', 'Blasteroids'], page: 'blasteroids.html#ess' },
+    paint: { icon: '🎨', name: ['Restore the Masters', 'Restaura las obras maestras'], page: 'paint.html#ess' }
+  };
+  var TX = {
+    lName: ['Your name (optional)', 'Tu nombre (opcional)'], lPer: ['Period', 'Período'], go: ['PLAY', 'JUGAR'],
+    qs: ['questions', 'preguntas'], min: ['min', 'min'],
+    bad: ['This game link is broken or cut off. Scan the QR code again, or ask your teacher for the link.', 'Este enlace está roto o incompleto. Escanea el código QR otra vez o pídele el enlace a tu maestro.'],
+    old: ['This browser is too old to open the game. Try Chrome or Safari.', 'Este navegador es muy viejo para abrir el juego. Prueba Chrome o Safari.'],
+    save: ['This browser won’t let the game start. Try Safari or Chrome, and not a private window.', 'Este navegador no deja empezar el juego. Prueba Safari o Chrome, sin ventana privada.']
+  };
+  var $ = function(id){ return document.getElementById(id); };
+  var lang = /^es\b/i.test(navigator.language || '') ? 'es' : 'en', data = null;
+  function T(k){ return TX[k][lang === 'es' ? 1 : 0]; }
+
+  function unb43(s){
+    if (s.length % 3 === 1) throw new Error('length');
+    var out = new Uint8Array(Math.floor(s.length / 3) * 2 + (s.length % 3 ? 1 : 0)), o = 0;
+    for (var i = 0; i < s.length; i += 3){
+      var v = 0, k = Math.min(3, s.length - i);
+      for (var j = k - 1; j >= 0; j--){
+        var d = B43.indexOf(s.charAt(i + j));
+        if (d < 0) throw new Error('char');
+        v = v * 43 + d;
+      }
+      if (k === 3){ if (v > 65535) throw new Error('value'); out[o++] = v >> 8; out[o++] = v & 255; }
+      else { if (v > 255) throw new Error('value'); out[o++] = v; }
+    }
+    return out;
+  }
+  function unpack(code, cb){
+    var bytes;
+    try { if (code.charAt(0) !== '1') throw 0; bytes = unb43(code.slice(1)); } catch (e) { return cb(null, 'bad'); }
+    if (!window.DecompressionStream) return cb(null, 'old');
+    new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text()
+      .then(function(t){ try { cb(JSON.parse(t)); } catch (e) { cb(null, 'bad'); } }, function(){ cb(null, 'bad'); });
+  }
+  // [question, [choices], answer index, Spanish question, [Spanish choices]]
+  function questions(d){
+    var out = [];
+    (Array.isArray(d.q) ? d.q : []).forEach(function(x){
+      if (!Array.isArray(x) || typeof x[0] !== 'string' || !Array.isArray(x[1]) || x[1].length < 2) return;
+      var a = x[2] | 0;
+      if (a < 0 || a >= x[1].length) return;
+      var q = { tp: 't', q: x[0], c: x[1].map(String), a: a };
+      if (typeof x[3] === 'string' && x[3] && Array.isArray(x[4]) && x[4].length === q.c.length) q.es = { q: x[3], c: x[4].map(String) };
+      out.push(q);
+    });
+    return out;
+  }
+
+  function draw(){
+    var g = GAMES[data.g], es = lang === 'es';
+    document.documentElement.lang = lang;
+    $('icon').textContent = g.icon;
+    $('title').textContent = data.t || g.name[es ? 1 : 0];
+    $('sub').textContent = (data.t ? g.name[es ? 1 : 0] + ' · ' : '') + data.qs.length + ' ' + T('qs') + ' · ' + data.m + ' ' + T('min');
+    ['lName', 'lPer', 'go'].forEach(function(k){ $(k).textContent = T(k); });
+    [].forEach.call($('lang').children, function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-v') === lang)); });
+  }
+  function start(){
+    var name = $('name').value.trim(), g = GAMES[data.g];
+    var launch = { v: 1, s: data.g, m: data.m, lang: lang, name: name, first: name.split(/\s+/)[0] || '', per: $('per').value.trim(),
+      course: data.t || '', topics: [{ id: 't', name: data.t || g.name[lang === 'es' ? 1 : 0] }], q: data.qs, link: 1 };
+    try { localStorage.setItem(LAUNCH, JSON.stringify(launch)); } catch (e) { $('err').textContent = T('save'); return; }
+    if (window.__nbGo) window.__nbGo(g.page); else location.href = g.page;   // the one-file PBworks copy has its own way between pages
+  }
+
+  var m = /^#play=([0-9A-Z$*+\-.\/:]+)$/.exec(location.hash.replace(/%24/gi, '$').replace(/%2A/gi, '*'));
+  if (!m){ $('err').textContent = T('bad'); return; }
+  unpack(m[1], function(d, why){
+    if (!d || !GAMES[d.g]){ $('err').textContent = T(why || 'bad'); return; }
+    d.qs = questions(d);
+    if (!d.qs.length){ $('err').textContent = T('bad'); return; }
+    d.m = Math.min(60, Math.max(1, parseInt(d.m, 10) || 10));
+    data = d;
+    if (!d.qs.some(function(q){ return q.es; })){ lang = 'en'; $('langBox').classList.add('hidden'); }
+    $('lang').addEventListener('click', function(e){ var b = e.target.closest('button'); if (b){ lang = b.getAttribute('data-v'); draw(); } });
+    $('go').addEventListener('click', start);
+    $('form').classList.remove('hidden');
+    draw();
+  });
+})();
+</script>
+</body>
+</html>

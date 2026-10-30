@@ -10,13 +10,14 @@ the address:
     (nothing), #<unit>, #class=..., #teacher   the notebook (index.html)
     #ess-games, #ess-paint, ...            a review game started from the notebook
     #host, #test, #solo=...                the Quiz Quest style host page (games.html)
+    #play=...                              a game a teacher assigned by link (play.html)
 Links like href="index.html" or "snake.html#ess" are caught and turned
 into those addresses. Rerun this after changing any page.
 """
 import json, os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PAGES = ["index", "games", "paint", "snake", "blasteroids", "zombie"]
+PAGES = ["index", "games", "paint", "snake", "blasteroids", "zombie", "play"]
 OUT = os.path.join(ROOT, "pbworks", "digitalnotebook.html")
 
 def read(name):
@@ -73,6 +74,7 @@ boot = """<!doctype html>
   });
   function pageFor(h){
     var m = /^#ess-(\\w+)/i.exec(h);
+    if (/^#play=/i.test(h)) return "play";
     return m && PAGES[m[1].toLowerCase()] ? m[1].toLowerCase() : /^#(host|test|solo=)/i.test(h) ? "games" : "index";
   }
   var page = pageFor(location.hash);

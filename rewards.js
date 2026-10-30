@@ -52,7 +52,12 @@
   }
 
   /* a game just ended: save its coin and trophy and say what was won */
+  /* a game a teacher assigned by link (play.html) is practice only: no coins or trophies */
+  function fromLink(){
+    try { var d = JSON.parse(localStorage.getItem("digitalNotebook.launch")); return !!(d && d.link); } catch (e) { return false; }
+  }
   function award(game, right, total){
+    if (fromLink()) return { game: game, link: true, right: right, total: total, up: [] };
     var k = medalFor(right, total), res = { game: game, k: k, right: right, total: total, up: [], trophy: "", prize: false };
     if (!k) return res;
     var st = read(), pct = Math.round(right * 100 / total), old = st.tr[game];
@@ -89,6 +94,7 @@
     var es = lang === "es", lines = [];
     var box = 'margin:12px auto 4px;max-width:420px;padding:10px 12px;border-radius:12px;background:#1b1040;color:#fff4e6;border:2px solid #f8b800;' +
       'font:600 14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;text-align:center';
+    if (res.link) return "";
     if (res.free) return '<div style="' + box + '">' + (es ? "Juego gratis: sin monedas ni trofeos." : "Free play: no coins or trophies.") + "</div>";
     if (!res.k){
       var need = MIN_Q - res.total;
