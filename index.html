@@ -46,7 +46,7 @@ button,select{font:inherit;color:inherit}
 @keyframes fl{50%{transform:translateY(-14px)}}
 .art{position:absolute;left:0;right:0;bottom:0;width:100%;height:30vh;max-height:260px;pointer-events:none;animation:rise 1.6s cubic-bezier(.2,.7,.2,1) both}
 @keyframes rise{from{transform:translateY(40%);opacity:0}to{transform:none;opacity:1}}
-.title-inner{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;padding:32px 24px calc(30vh + 24px);max-width:520px;width:100%;margin:0 auto}
+.title-inner{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;padding:calc(32px + env(safe-area-inset-top,0px)) 24px calc(30vh + 24px);max-width:520px;width:100%;margin:0 auto}
 .title-inner h1{font-weight:800;font-size:clamp(2.4rem,11vw,3.8rem);letter-spacing:-.02em;line-height:.98;margin-bottom:14px;overflow-wrap:anywhere}
 .title-inner h1 span{display:block;font-weight:600;font-size:.52em;letter-spacing:0;color:var(--ice);margin-top:10px}
 .lede{color:var(--muted);margin-bottom:26px}
@@ -67,7 +67,7 @@ select{width:100%;appearance:none;-webkit-appearance:none;background:var(--panel
 .title-foot .me-line:empty{display:none}
 
 /* Page chrome */
-.page{max-width:680px;margin:0 auto;padding:12px 20px 40px}
+.page{max-width:680px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top,0px)) calc(20px + env(safe-area-inset-right,0px)) calc(40px + env(safe-area-inset-bottom,0px)) calc(20px + env(safe-area-inset-left,0px))}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 56px 18px 0}
 .teach-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:22px;padding-top:16px;border-top:1px dashed var(--line)}
 .teach-row .btn{font-size:15px}
@@ -122,7 +122,7 @@ mark{background:var(--amberMark);color:inherit;border-radius:5px;padding:0 3px;-
 .empty-sheet{color:var(--muted)}
 
 /* Sheet */
-.scrim{position:fixed;inset:0;background:rgba(4,10,18,.65);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.scrim{position:fixed;inset:0;height:var(--vvh,100%);top:var(--vvtop,0px);bottom:auto;background:rgba(4,10,18,.65);display:none;align-items:flex-end;justify-content:center;z-index:20}
 .scrim.on{display:flex}
 .sheet{background:var(--panel);border:1.5px solid var(--line);border-bottom:0;border-radius:24px 24px 0 0;width:100%;max-width:560px;padding:26px 22px calc(22px + env(safe-area-inset-bottom,0px));animation:up .3s cubic-bezier(.2,.7,.2,1)}
 @keyframes up{from{transform:translateY(100%)}}
@@ -132,7 +132,8 @@ mark{background:var(--amberMark);color:inherit;border-radius:5px;padding:0 3px;-
 .sheet .row .btn{flex:1}
 .count{font-family:var(--head);font-size:3rem;font-weight:800;color:var(--amber);line-height:1;margin:6px 0 4px}
 .small{font-size:13px;color:var(--muted)}
-.sheet.tall{max-height:calc(92vh - env(safe-area-inset-top,0px));max-height:calc(92dvh - env(safe-area-inset-top,0px));overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sheet.tall{max-height:calc(92vh - env(safe-area-inset-top,0px));max-height:calc(92dvh - env(safe-area-inset-top,0px));max-height:calc(var(--vvh,100dvh) - 8px - env(safe-area-inset-top,0px));overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+body.sheet-open{overflow:hidden}
 
 /* Reward Center */
 .rw-open{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:14px;border:1.5px solid var(--amber);background:rgba(244,184,96,.1);color:var(--text);border-radius:14px;padding:12px 16px;font-weight:700;cursor:pointer}
@@ -155,7 +156,7 @@ mark{background:var(--amberMark);color:inherit;border-radius:5px;padding:0 3px;-
 .rw-acts .btn{padding:10px 14px;font-size:15px;flex:1}
 
 /* Cog, profile, games */
-.cog{position:fixed;top:12px;right:12px;z-index:10;width:46px;height:46px;border-radius:50%;border:1.5px solid var(--line);background:var(--glass);display:grid;place-items:center;cursor:pointer;padding:0}
+.cog{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));z-index:10;width:46px;height:46px;border-radius:50%;border:1.5px solid var(--line);background:var(--glass);display:grid;place-items:center;cursor:pointer;padding:0}
 .cog svg{width:24px;height:24px}
 .cog path{fill:var(--ice)}
 .games-label{margin-top:22px}
@@ -164,7 +165,7 @@ mark{background:var(--amberMark);color:inherit;border-radius:5px;padding:0 3px;-
 .inp{width:100%;background:var(--sky2);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font:inherit;font-size:17px;color:var(--text)}
 .inp.num{width:110px}
 select.inp{padding-right:40px}
-textarea.inp{min-height:150px;font-size:14px;line-height:1.4;resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace}
+textarea.inp{min-height:150px;font-size:16px;line-height:1.4;resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace}
 textarea.inp.notes{min-height:90px}
 .seg{display:flex;gap:8px;flex-wrap:wrap}
 .seg button{flex:1;border:1.5px solid var(--line);background:var(--sky2);border-radius:12px;padding:12px;font-weight:700;cursor:pointer}
@@ -1099,17 +1100,34 @@ $("#resetOrder").addEventListener("click", () => {
 /* =========================================================
    SHEET, SAVE CHECK
    ========================================================= */
+/* iPhone: the on-screen keyboard covers the bottom of the page without resizing it.
+   Size the sheet to the part of the screen you can see, so Save stays above the keyboard. */
+(function followKeyboard(){
+  const vv = window.visualViewport; if (!vv) return;
+  const fit = () => {
+    const r = document.documentElement.style;
+    r.setProperty("--vvh", vv.height + "px");
+    r.setProperty("--vvtop", vv.offsetTop + "px");
+  };
+  vv.addEventListener("resize", fit); vv.addEventListener("scroll", fit); fit();
+})();
+/* when a box is tapped, keep it in view above the keyboard */
+document.addEventListener("focusin", e => {
+  if (!e.target.matches || !e.target.matches("#sheet input:not([type=checkbox]), #sheet textarea")) return;
+  setTimeout(() => e.target.scrollIntoView({ block: "center", behavior: "smooth" }), 300);
+});
 /* o.tall: scrolls when taller than the screen; o.locked: can't be closed by tapping outside (first-time sign in) */
 let sheetLocked = false;
 function openSheet(html, o = {}){
   sheetLocked = !!o.locked;
+  document.body.classList.add("sheet-open");
   const sh = $("#sheet");
   sh.className = "sheet" + (o.tall ? " tall" : "");
   sh.innerHTML = html; sh.scrollTop = 0;
   $("#scrim").classList.add("on");
   const b = sh.querySelector("button"); if (b) b.focus({ preventScroll: true });
 }
-function closeSheet(){ $("#scrim").classList.remove("on"); sheetLocked = false; applyTheme(C().theme); if (!views.title.classList.contains("on")){ const y = window.scrollY; route(); window.scrollTo(0, y); } }   // drops a theme the title page screen was only previewing
+function closeSheet(){ $("#scrim").classList.remove("on"); document.body.classList.remove("sheet-open"); sheetLocked = false; applyTheme(C().theme); if (!views.title.classList.contains("on")){ const y = window.scrollY; route(); window.scrollTo(0, y); } }   // drops a theme the title page screen was only previewing
 $("#scrim").addEventListener("click", e => { if ((e.target.id === "scrim" && !sheetLocked) || e.target.dataset.close !== undefined) closeSheet(); });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !sheetLocked) closeSheet(); });
 
@@ -1124,7 +1142,7 @@ function saveCheck(){
 /* copy text, or show it selected in a box when the browser won't let us */
 function copyText(text, box, msg, okText){
   const fallback = () => {
-    box.value = text; box.hidden = false; box.focus(); box.select();
+    box.value = text; box.hidden = false; box.focus(); box.select(); try { box.setSelectionRange(0, text.length); } catch(e){}
     msg.className = "msg warn"; msg.textContent = T("Couldn’t copy automatically. The text is selected in the box below: copy it yourself.", "No se pudo copiar solo. El texto está seleccionado en el cuadro de abajo: cópialo tú.");
   };
   if (navigator.clipboard && navigator.clipboard.writeText){
@@ -1406,7 +1424,7 @@ function cogSheet(){
 
 /* ---- teacher code: unlocks editing on a device that opened a student class link ---- */
 const TEACHER_CODE = "yourdadacademy";
-const NB_VERSION = "Nov 4, 2026 · Teacher reset";   // shown in the cog menu, so a teacher can tell if the browser has the newest copy
+const NB_VERSION = "Nov 4, 2026 · iPhone";   // shown in the cog menu, so a teacher can tell if the browser has the newest copy
 function teacherCodeSheet(){
   openSheet(`<h3 id="sheetTitle">${T("Teacher code", "Código de maestro")}</h3>
     <p>${T("<b>This notebook can’t be edited here.</b> It was opened from a student class link, so editing is locked on this device and students can’t change anything.", "<b>Este cuaderno no se puede editar aquí.</b> Se abrió con un enlace de clase para estudiantes, así que la edición está bloqueada en este aparato y los estudiantes no pueden cambiar nada.")}</p>
@@ -1953,7 +1971,7 @@ function linkSheet(){
   });
   $("#lCopy").addEventListener("click", () => {
     const box = $("#lLink"), b = $("#lCopy"), done = () => { b.textContent = T("Copied!", "¡Copiado!"); setTimeout(() => { b.textContent = T("Copy link", "Copiar enlace"); }, 2000); };
-    const fallback = () => { box.focus(); box.select(); b.textContent = T("Copy the selected link", "Copia el enlace seleccionado"); };
+    const fallback = () => { box.focus(); box.select(); try { box.setSelectionRange(0, box.value.length); } catch(e){} b.textContent = T("Copy the selected link", "Copia el enlace seleccionado"); };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(box.value).then(done, fallback); else fallback();
   });
 }
