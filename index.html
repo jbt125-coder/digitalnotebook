@@ -849,9 +849,20 @@ function smartPaste(box, after){
 function blankCourse(){ return { v: 1, title: "", teacher: "", theme: "plain", grade: "", units: [], topics: {}, q: [], pref: {} }; }
 const str = (x, n) => typeof x === "string" ? x.slice(0, n) : "";
 const okC = c => Array.isArray(c) && c.length >= 2 && c.every(x => typeof x === "string");
+/* Text copied out of some apps or links arrives web-encoded: "What%20is%20a%20cation%3F".
+   Turn those codes back into spaces and letters (real percents like "50% of" are left alone),
+   and swap odd invisible spaces for plain ones. */
+function cleanText(t){
+  t = String(t == null ? "" : t);
+  if (/%(?:20|0A|0D|3A|3F|2C|C2|C3|E2)/i.test(t)){
+    t = t.replace(/(?:%[0-9A-Fa-f]{2})+/g, m => { try { return decodeURIComponent(m); } catch(e){ return m; } });
+    if (!/ /.test(t.replace(/\n/g, "")) && /\+/.test(t)) t = t.replace(/\+/g, " ");   // form-style encoding uses + for spaces
+  }
+  return t.replace(/\r\n?/g, "\n").replace(/[\u00A0\u2007\u202F]/g, " ").replace(/[\u200B-\u200D\uFEFF]/g, "");
+}
 function checkQ(list, topics){
   return (Array.isArray(list) ? list : []).filter(x => x && topics[x.tp] && typeof x.q === "string" && okC(x.c) && x.a >= 0 && x.a < x.c.length)
-    .map(x => { const o = { tp: x.tp, q: x.q, c: x.c, a: x.a }; if (x.es && typeof x.es.q === "string" && okC(x.es.c) && x.es.c.length === x.c.length) o.es = { q: x.es.q, c: x.es.c }; return o; });
+    .map(x => { const o = { tp: x.tp, q: cleanText(x.q), c: x.c.map(cleanText), a: x.a }; if (x.es && typeof x.es.q === "string" && okC(x.es.c) && x.es.c.length === x.c.length) o.es = { q: cleanText(x.es.q), c: x.es.c.map(cleanText) }; return o; });
 }
 function checkCourse(d){
   if (!d || typeof d !== "object") return null;
@@ -863,8 +874,8 @@ function checkCourse(d){
   for (const id in tps){
     const t = tps[id];
     if (!/^[a-z0-9-]{1,40}$/.test(id) || !t || typeof t !== "object") continue;
-    const o = { title: str(t.title, 80) || id, sum: str(t.sum, 240), sheet: str(t.sheet, 30000) };
-    if (t.es && typeof t.es === "object" && (t.es.sheet || t.es.title)) o.es = { title: str(t.es.title, 80), sum: str(t.es.sum, 240), sheet: str(t.es.sheet, 30000) };
+    const o = { title: cleanText(str(t.title, 80)) || id, sum: cleanText(str(t.sum, 240)), sheet: cleanText(str(t.sheet, 30000)) };
+    if (t.es && typeof t.es === "object" && (t.es.sheet || t.es.title)) o.es = { title: cleanText(str(t.es.title, 80)), sum: cleanText(str(t.es.sum, 240)), sheet: cleanText(str(t.es.sheet, 30000)) };
     c.topics[id] = o;
   }
   const seen = new Set();
@@ -1111,6 +1122,13 @@ $("#resetOrder").addEventListener("click", () => {
   };
   vv.addEventListener("resize", fit); vv.addEventListener("scroll", fit); fit();
 })();
+/* any box in a sheet: web-encoded text ("What%20is%20...") is cleaned the moment it lands */
+document.addEventListener("input", e => {
+  const b = e.target;
+  if (!b.matches || !b.matches("#sheet textarea:not([readonly]), #sheet input.inp")) return;
+  const v = b.value, t = cleanText(v);
+  if (t !== v && /%[0-9A-Fa-f]{2}/.test(v)){ b.value = t; b.dispatchEvent(new Event("input", { bubbles: true })); }
+}, true);
 /* when a box is tapped, keep it in view above the keyboard */
 document.addEventListener("focusin", e => {
   if (!e.target.matches || !e.target.matches("#sheet input:not([type=checkbox]), #sheet textarea")) return;
@@ -1234,6 +1252,7 @@ function parseSection(body){
   return { q, c, a };
 }
 function parseBank(text){
+  text = cleanText(text);
   const out = [], problems = [], unknown = [];
   let tp = null, label = "", cur = null;
   const finish = () => {
@@ -1424,7 +1443,7 @@ function cogSheet(){
 
 /* ---- teacher code: unlocks editing on a device that opened a student class link ---- */
 const TEACHER_CODE = "yourdadacademy";
-const NB_VERSION = "Nov 4, 2026 · Questions helper";   // shown in the cog menu, so a teacher can tell if the browser has the newest copy
+const NB_VERSION = "Nov 4, 2026 · Clean paste";   // shown in the cog menu, so a teacher can tell if the browser has the newest copy
 function teacherCodeSheet(){
   openSheet(`<h3 id="sheetTitle">${T("Teacher code", "Código de maestro")}</h3>
     <p>${T("<b>This notebook can’t be edited here.</b> It was opened from a student class link, so editing is locked on this device and students can’t change anything.", "<b>Este cuaderno no se puede editar aquí.</b> Se abrió con un enlace de clase para estudiantes, así que la edición está bloqueada en este aparato y los estudiantes no pueden cambiar nada.")}</p>
