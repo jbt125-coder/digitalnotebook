@@ -1621,12 +1621,14 @@ function topicSheet(id, unitId){
     </details>
     <details class="fold"${t.es && t.es.sheet ? " open" : ""}>
       <summary>${T("Optional: Spanish cheat sheet", "Opcional: hoja de estudio en español")}</summary>
-    <p class="small" style="margin:0 0 6px">${T("For students who choose Español. Make the English one first, copy the translation prompt into an AI chat, and paste its answer here.", "Para los estudiantes que eligen español. Primero haz la de inglés, copia las instrucciones de traducción en un chat de IA y pega aquí su respuesta.")}</p>
+    <p class="small" style="margin:0 0 6px">${T("For students who choose Español. Type or paste the Spanish version in the box below. Want AI to translate it? Copy the translation prompt into an AI chat and paste its answer in the box.", "Para los estudiantes que eligen español. Escribe o pega la versión en español en el cuadro de abajo. ¿Quieres que la IA la traduzca? Copia las instrucciones de traducción en un chat de IA y pega su respuesta en el cuadro.")}</p>
     <div class="row" style="margin-top:0"><button class="btn ghost" id="kEsCopy">${T("Copy translation prompt", "Copiar instrucciones de traducción")}</button></div>
     <p class="msg" id="kEsCopyMsg"></p>
     <textarea class="inp" id="kEsPromptBox" readonly hidden></textarea>
     <textarea class="inp" id="kEs" spellcheck="false" style="margin-top:10px" placeholder="Title: …&#10;Summary: …&#10;# …">${esc(t.es ? t.es.sheet : "")}</textarea>
     <p class="msg" id="kEsMsg"></p>
+    <div class="row"><button class="btn" id="kEsSave">${T("Save cheat sheet (English and Spanish)", "Guardar hoja de estudio (inglés y español)")}</button></div>
+    <p class="small" style="margin:8px 0 0">${T("This saves both versions together. The bottom <b>Save cheat sheet</b> button does the same.", "Esto guarda las dos versiones juntas. El botón <b>Guardar hoja de estudio</b> de abajo hace lo mismo.")}</p>
     </details>
     ${id ? `<div class="row"><button class="btn ghost" id="kDel">${T("Delete this topic", "Borrar este tema")}</button></div>` : ""}
     <div class="row savebar"><p class="msg warn" id="kErr"></p><button class="btn" id="kSave">${T("Save cheat sheet", "Guardar hoja de estudio")}</button><button class="btn ghost" id="sBack">${T("Back", "Atrás")}</button></div>
@@ -1658,8 +1660,8 @@ function topicSheet(id, unitId){
     const txt = $("#kEs").value, msg = $("#kEsMsg");
     if (!txt.trim()){ msg.className = "msg"; msg.textContent = T("No Spanish cheat sheet. Students who choose Español see the English one.", "No hay hoja en español. Los estudiantes que eligen español ven la de inglés."); return; }
     const s = sheetStats(txt);
-    msg.className = "msg" + (s.sections ? "" : " warn");
-    msg.textContent = s.sections ? T(`Spanish cheat sheet ready: ${s.sections} sections.`, `Hoja en español lista: ${s.sections} secciones.`) : T("This doesn’t look like a cheat sheet yet: it needs # section titles.", "Esto todavía no parece una hoja de estudio: necesita títulos de sección con #.");
+    msg.className = "msg";
+    msg.textContent = s.sections ? T(`Spanish cheat sheet ready: ${s.sections} sections.`, `Hoja en español lista: ${s.sections} secciones.`) : T("Spanish cheat sheet ready.", "Hoja en español lista.");
   };
   $("#kSheet").addEventListener("input", check); smartPaste($("#kSheet"), check);
   $("#kEs").addEventListener("input", checkEs); smartPaste($("#kEs"), checkEs);
@@ -1669,13 +1671,15 @@ function topicSheet(id, unitId){
     if (!txt){ $("#kEsCopyMsg").className = "msg warn"; $("#kEsCopyMsg").textContent = T("Paste the English cheat sheet first, then translate it.", "Primero pega la hoja en inglés y luego tradúcela."); return; }
     copyText(esSheetPrompt(txt), $("#kEsPromptBox"), $("#kEsCopyMsg"), T("Copied! Paste it into an AI chat.", "¡Copiado! Pégalo en un chat de IA."));
   });
+  $("#kEsSave").addEventListener("click", () => $("#kSave").click());
+  ["#kTitle", "#kSheet", "#kEs"].forEach(b => $(b).addEventListener("input", () => { $("#kErr").textContent = ""; }));
   $("#kSave").addEventListener("click", () => {
     if (!$("#kSheet").value.trim() && $("#kNotes").value.trim()){ $("#kSheet").value = $("#kNotes").value; $("#kNotes").value = ""; check(); }
     const sheet = $("#kSheet").value.trim(), s = parseSheet(sheet), title = $("#kTitle").value.trim().slice(0, 80) || s.title.slice(0, 80);
     const err = $("#kErr"), fail = (t, box) => { err.textContent = t; if (box){ box.scrollIntoView({ block: "center", behavior: "smooth" }); box.focus({ preventScroll: true }); } };
     err.textContent = "";
     if (!title) return fail(T("Type a topic title.", "Escribe el título del tema."), $("#kTitle"));
-    if (!s.blocks.length) return fail(T("Type or paste your information in the Cheat sheet box first.", "Primero escribe o pega tu información en el cuadro Hoja de estudio."), $("#kSheet"));
+    if (!s.blocks.length) return fail($("#kEs").value.trim() ? T("The Spanish one is ready, but the English cheat sheet is empty. Type or paste the English version in the Cheat sheet box at the top, then save.", "La de español está lista, pero la hoja en inglés está vacía. Escribe o pega la versión en inglés en el cuadro Hoja de estudio de arriba y guarda.") : T("Type or paste your information in the Cheat sheet box first.", "Primero escribe o pega tu información en el cuadro Hoja de estudio."), $("#kSheet"));
     const u = c.units.find(x => x.id === $("#kUnit").value);
     if (!u) return fail(T("Pick a unit for this topic.", "Elige una unidad para este tema."), $("#kUnit"));
     const tid = id || newTopicId(title), es = $("#kEs").value.trim(), se = parseSheet(es);
