@@ -983,7 +983,7 @@ function openToc(u){
   $("#meterFill").style.width = (n / order.length * 100) + "%";
   const rb = $("#resetOrder");
   rb.hidden = !Array.isArray(save.order[u]);
-  teachRow("#tocTeach", [T("✎ Edit units and cheat sheets", "✎ Editar unidades y hojas de estudio"), T("✎ Edit this unit’s questions", "✎ Editar las preguntas de esta unidad")]);
+  teachRow("#tocTeach", [T("✎ Edit this unit", "✎ Editar esta unidad"), T("✎ Edit this unit’s questions", "✎ Editar las preguntas de esta unidad")]);
   rb.textContent = c.teacher ? T(`Reset to ${c.teacher}’s order`, `Volver al orden de ${c.teacher}`) : T("Reset to the teacher’s order", "Volver al orden del maestro");
   show("toc");
 }
@@ -1467,10 +1467,11 @@ function titleSheet(){
 /* ---- units and topics ---- */
 function unitsSheet(){
   const c = course;
+  topicBack = unitsSheet;
   const unitHtml = (u, i) => `<div class="unit" data-u="${u.id}">
       <div class="unit-head"><b>${esc(u.name)}</b>
         <button class="mini" data-act="uup" ${i ? "" : 'style="visibility:hidden"'} aria-label="${T("Move up", "Subir")}">↑</button><button class="mini" data-act="udown" ${i < c.units.length - 1 ? "" : 'style="visibility:hidden"'} aria-label="${T("Move down", "Bajar")}">↓</button>
-        <button class="mini" data-act="uren">${T("Rename", "Renombrar")}</button><button class="mini danger" data-act="udel">${T("Delete", "Borrar")}</button></div>
+        <button class="mini" data-act="uedit">${T("Edit", "Editar")}</button><button class="mini" data-act="uren">${T("Rename", "Renombrar")}</button><button class="mini danger" data-act="udel">${T("Delete", "Borrar")}</button></div>
       ${u.tp.map((id, j) => { const t = c.topics[id], n = c.q.filter(q => q.tp === id).length; return `<div class="trow" data-tp="${id}"><span>${esc(t.title)}<small>${T(`${n} questions`, `${n} preguntas`)}${t.es && t.es.sheet ? " · Español ✓" : ""}</small></span>
         <button class="mini" data-act="tup" ${j ? "" : 'style="visibility:hidden"'} aria-label="${T("Move up", "Subir")}">↑</button><button class="mini" data-act="tdown" ${j < u.tp.length - 1 ? "" : 'style="visibility:hidden"'} aria-label="${T("Move down", "Bajar")}">↓</button>
         <button class="mini" data-act="tedit">${T("Edit", "Editar")}</button></div>`; }).join("")}
@@ -1499,8 +1500,9 @@ function unitsSheet(){
     const keepScroll = () => { const s = $("#sheet").scrollTop; unitsSheet(); $("#sheet").scrollTop = s; };
     if (act === "uup" || act === "udown"){ move(c.units, ui, act === "uup" ? -1 : 1); saved(); return keepScroll(); }
     if (act === "tup" || act === "tdown"){ move(u.tp, u.tp.indexOf(tid), act === "tup" ? -1 : 1); saved(); return keepScroll(); }
-    if (act === "tedit") return topicSheet(tid);
-    if (act === "tadd") return topicSheet(null, u.id);
+    if (act === "uedit") return unitSheet(u.id);
+    if (act === "tedit"){ topicBack = unitsSheet; return topicSheet(tid); }
+    if (act === "tadd"){ topicBack = unitsSheet; return topicSheet(null, u.id); }
     if (act === "uren"){
       const head = ue.querySelector(".unit-head");
       head.innerHTML = `<input class="inp" maxlength="50" value="${esc(u.name)}" style="flex:1;min-width:150px"><button class="mini" data-act="usave">${T("Save", "Guardar")}</button>`;
@@ -1519,6 +1521,57 @@ function unitsSheet(){
       b.textContent = u.tp.length ? T(`Tap again: deletes ${u.tp.length} topics too`, `Toca otra vez: borra ${u.tp.length} temas también`) : T("Tap again to delete", "Toca otra vez para borrar");
       setTimeout(() => { delete b.dataset.armed; b.textContent = T("Delete", "Borrar"); }, 4000);
     }
+  });
+}
+
+/* ---- one unit: its name, its cheat sheets, its questions ---- */
+let topicBack = unitsSheet;   // where the cheat sheet editor returns to
+function unitSheet(uid){
+  const c = course, u = c.units.find(x => x.id === uid);
+  if (!u) return unitsSheet();
+  topicBack = () => unitSheet(uid);
+  const nq = c.q.filter(q => u.tp.includes(q.tp)).length;
+  openSheet(`<h3 id="sheetTitle">${T("Edit unit", "Editar unidad")}</h3>
+    <label class="field" for="eName">${T("Unit name", "Nombre de la unidad")}</label>
+    <div class="picker"><input class="inp" id="eName" maxlength="50" value="${esc(u.name)}"><button class="btn" id="eSave">${T("Save", "Guardar")}</button></div>
+    <p class="msg" id="eMsg"></p>
+    <span class="field">${T("Cheat sheets in this unit", "Hojas de estudio de esta unidad")}</span>
+    <div class="unit" id="eList">
+      ${u.tp.map((id, j) => { const t = c.topics[id], n = c.q.filter(q => q.tp === id).length; return `<div class="trow" data-tp="${id}"${j ? "" : ' style="border-top:0"'}><span>${esc(t.title)}<small>${T(`${n} questions`, `${n} preguntas`)}${t.es && t.es.sheet ? " · Español ✓" : ""}</small></span>
+        <button class="mini" data-act="tup" ${j ? "" : 'style="visibility:hidden"'} aria-label="${T("Move up", "Subir")}">↑</button><button class="mini" data-act="tdown" ${j < u.tp.length - 1 ? "" : 'style="visibility:hidden"'} aria-label="${T("Move down", "Bajar")}">↓</button>
+        <button class="mini" data-act="tedit">${T("Edit", "Editar")}</button></div>`; }).join("") || `<p class="small" style="margin:4px 0">${T("No cheat sheets yet.", "Todavía no hay hojas de estudio.")}</p>`}
+      <div class="row" style="margin-top:10px"><button class="btn ghost" data-act="tadd">+ ${T("Add a cheat sheet", "Agregar una hoja de estudio")}</button></div>
+    </div>
+    <div class="row"><button class="btn ghost" id="eQs">${T(`Edit this unit’s review questions (${nq})`, `Editar las preguntas de repaso de esta unidad (${nq})`)}</button></div>
+    <p class="msg warn" id="eQMsg" hidden></p>
+    <hr>
+    <div class="row"><button class="btn ghost" id="eDel">${T("Delete this unit", "Borrar esta unidad")}</button></div>
+    ${backRow()}`, { tall: true });
+  bindBack(unitsSheet);
+  const rename = () => {
+    u.name = $("#eName").value.trim().slice(0, 50) || u.name; saved();
+    $("#eName").value = u.name; $("#eMsg").className = "msg"; $("#eMsg").textContent = T("Saved.", "Guardado.");
+  };
+  $("#eSave").addEventListener("click", rename);
+  $("#eName").addEventListener("keydown", e => { if (e.key === "Enter") rename(); });
+  $("#eList").addEventListener("click", e => {
+    const b = e.target.closest("[data-act]"); if (!b) return;
+    const te = b.closest(".trow"), tid = te && te.dataset.tp, act = b.dataset.act;
+    if (act === "tedit") return topicSheet(tid);
+    if (act === "tadd") return topicSheet(null, uid);
+    const i = u.tp.indexOf(tid), j = i + (act === "tup" ? -1 : 1);
+    if (j < 0 || j >= u.tp.length) return;
+    [u.tp[i], u.tp[j]] = [u.tp[j], u.tp[i]];
+    const s = $("#sheet").scrollTop; saved(); unitSheet(uid); $("#sheet").scrollTop = s;
+  });
+  $("#eQs").addEventListener("click", () => {
+    if (u.tp.length) return questionsSheet(u.tp);
+    const m = $("#eQMsg"); m.hidden = false; m.textContent = T("Add a cheat sheet first. Questions are made from the unit’s cheat sheets.", "Primero agrega una hoja de estudio. Las preguntas se hacen a partir de las hojas de estudio de la unidad.");
+  });
+  armed($("#eDel"), T("Delete this unit", "Borrar esta unidad"), u.tp.length ? T(`Tap again: deletes ${u.tp.length} topics and their questions too`, `Toca otra vez: borra ${u.tp.length} temas y sus preguntas también`) : T("Tap again to delete", "Toca otra vez para borrar"), () => {
+    u.tp.forEach(id => delete c.topics[id]);
+    c.q = c.q.filter(q => c.topics[q.tp]);
+    c.units.splice(c.units.indexOf(u), 1); saved(); unitsSheet();
   });
 }
 
@@ -1567,7 +1620,7 @@ function topicSheet(id, unitId){
     <p class="msg warn" id="kErr"></p>
     <div class="row"><button class="btn" id="kSave">${id ? T("Save topic", "Guardar tema") : T("Add topic", "Agregar tema")}</button><button class="btn ghost" id="sBack">${T("Back", "Atrás")}</button></div>
     ${id ? `<div class="row"><button class="btn ghost" id="kDel">${T("Delete this topic", "Borrar este tema")}</button></div>` : ""}`, { tall: true });
-  bindBack(unitsSheet);
+  bindBack(() => topicBack());
   const opts = () => ({ title: $("#kTitle").value.trim(), course: c.title, grade: c.grade, notes: $("#kNotes").value.trim(), vocab: $("#kVocab").checked, rem: $("#kRem").checked, formula: $("#kFormula").checked, len: $("#kLen").value });
   $("#kCopy").addEventListener("click", () => {
     const o = opts();
@@ -1616,11 +1669,11 @@ function topicSheet(id, unitId){
     if (es) c.topics[tid].es = { title: se.title.slice(0, 80), sum: se.sum.slice(0, 240), sheet: es };
     c.units.forEach(x => { if (x !== u) x.tp = x.tp.filter(z => z !== tid); });
     if (!u.tp.includes(tid)) u.tp.push(tid);
-    saved(); unitsSheet();
+    saved(); topicBack();
   });
   if (id) armed($("#kDel"), T("Delete this topic", "Borrar este tema"), T("Tap again: deletes the topic and its questions", "Toca otra vez: borra el tema y sus preguntas"), () => {
     delete c.topics[id]; c.units.forEach(u => { u.tp = u.tp.filter(z => z !== id); }); c.q = c.q.filter(q => q.tp !== id);
-    saved(); unitsSheet();
+    saved(); topicBack();
   });
 }
 
@@ -1863,9 +1916,9 @@ openBtn.addEventListener("click", () => {
 $("#saveCheckBtn").addEventListener("click", saveCheck);
 $("#profileBtn").addEventListener("click", () => profileSheet(false));
 $("#cogBtn").addEventListener("click", cogSheet);
-$("#tEditUnit").addEventListener("click", unitsSheet);
+$("#tEditUnit").addEventListener("click", () => unitSheet(currentU));
 $("#tEditUnitQs").addEventListener("click", () => questionsSheet((unitOf(currentU) || { tp: [] }).tp));
-$("#tEditSheet").addEventListener("click", () => topicSheet(currentCard));
+$("#tEditSheet").addEventListener("click", () => { topicBack = () => unitSheet(currentU); topicSheet(currentCard); });
 $("#tEditCardQs").addEventListener("click", () => questionsSheet([currentCard]));
 /* =========================================================
    REWARD CENTER  (coins, trophies, prizes and free plays; rewards.js keeps them on this device)
