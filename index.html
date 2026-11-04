@@ -213,6 +213,12 @@ textarea.inp.link{min-height:0;height:90px;word-break:break-all}
 .mini{border:1.5px solid var(--line);background:var(--panel);border-radius:10px;padding:6px 10px;font-size:14px;font-weight:700;cursor:pointer;color:var(--ice);line-height:1.2}
 .mini:disabled{opacity:.35;cursor:default}
 .mini.danger{color:var(--amber)}
+.savebar .btn{white-space:nowrap}
+.savebar #kSave{flex:2}
+.savebar{position:sticky;bottom:calc(-22px - env(safe-area-inset-bottom,0px));background:var(--panel);margin:12px -22px 0;padding:12px 22px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);z-index:1}
+.fold{border:1.5px solid var(--line);border-radius:16px;padding:0 16px;margin-top:16px;background:var(--sky2)}
+.fold summary{cursor:pointer;font-weight:700;color:var(--ice);padding:14px 0;list-style-position:inside}
+.fold[open]{padding-bottom:14px}
 .preview{background:var(--sky);border:1.5px solid var(--line);border-radius:16px;padding:6px 16px 10px;margin-top:10px;max-height:340px;overflow-y:auto}
 .preview h3{font-size:1.1rem;margin:16px 0 6px}
 
@@ -1581,12 +1587,21 @@ function topicSheet(id, unitId){
   const home = id ? c.units.find(u => u.tp.includes(id)) : c.units.find(u => u.id === unitId);
   const pref = Object.assign({ len: "std", vocab: true, rem: true, formula: ["math", "science", "cs"].includes(c.theme) }, c.pref);
   openSheet(`<h3 id="sheetTitle">${id ? T("Edit cheat sheet", "Editar hoja de estudio") : T("Add a cheat sheet", "Agregar una hoja de estudio")}</h3>
+    <p class="small" style="margin:0">${T("Give the topic a title, then type or paste your cheat sheet and tap <b>Save cheat sheet</b>. Using AI is optional.", "Ponle un título al tema, escribe o pega tu hoja de estudio y toca <b>Guardar hoja de estudio</b>. Usar IA es opcional.")}</p>
     <label class="field" for="kTitle">${T("Topic title", "Título del tema")}</label>
     <input class="inp" id="kTitle" maxlength="80" value="${esc(t.title)}" placeholder="${T("Solving two-step equations", "Ecuaciones de dos pasos")}">
     <label class="field" for="kUnit">${T("Unit", "Unidad")}</label>
     <div class="select-wrap"><select class="inp" id="kUnit">${c.units.map(u => `<option value="${u.id}"${u === home ? " selected" : ""}>${esc(u.name)}</option>`).join("")}</select></div>
-    <hr>
-    <span class="field">${T("1. Make the AI prompt", "1. Haz las instrucciones para la IA")}</span>
+    <label class="field" for="kSheet">${T("Cheat sheet", "Hoja de estudio")}</label>
+    <p class="small" style="margin:0 0 6px">${T("Type or paste your information here: plain text works, and each line shows as its own line. Optional extras: start a line with <b>#</b> for a section heading or <b>-</b> for a bullet, put <b>**double stars**</b> around key words to highlight them, and use <b>Vocab: word: meaning</b> or <b>Remember: …</b> for cards and callouts.", "Escribe o pega tu información aquí: el texto simple funciona, y cada renglón sale en su propio renglón. Extras opcionales: empieza un renglón con <b>#</b> para un título de sección o con <b>-</b> para una viñeta, pon <b>**dos estrellas**</b> alrededor de las palabras clave para resaltarlas, y usa <b>Vocab: palabra: significado</b> o <b>Remember: …</b> para tarjetas y recuadros.")}</p>
+    <textarea class="inp" id="kSheet" spellcheck="true" placeholder="${T("Cells are the basic unit of life.&#10;# Parts of a cell&#10;- The **nucleus** holds the DNA.&#10;Vocab: membrane: the cell’s outer layer", "Las células son la unidad básica de la vida.&#10;# Partes de la célula&#10;- El **núcleo** guarda el ADN.&#10;Vocab: membrana: la capa exterior de la célula")}">${esc(t.sheet)}</textarea>
+    <p class="msg" id="kSheetMsg"></p>
+    <div class="preview" id="kPrev" hidden></div>
+    <p class="msg warn" id="kErr"></p>
+    <div class="row savebar"><button class="btn" id="kSave">${T("Save cheat sheet", "Guardar hoja de estudio")}</button><button class="btn ghost" id="sBack">${T("Back", "Atrás")}</button></div>
+    <details class="fold">
+      <summary>${T("Optional: have AI write it for you", "Opcional: que la IA la escriba por ti")}</summary>
+    <p class="small" style="margin:10px 0 0">${T("Want AI to write it? Fill this in, copy the prompt into an AI chat like ChatGPT, Gemini, or Claude, then paste its answer into the <b>Cheat sheet</b> box above.", "¿Quieres que la IA la escriba? Llena esto, copia las instrucciones en un chat de IA como ChatGPT, Gemini o Claude, y pega su respuesta en el cuadro <b>Hoja de estudio</b> de arriba.")}</p>
     <label class="field" for="kNotes">${T("What should it cover? (optional: paste your notes, a reading, or standards)", "¿Qué debe cubrir? (opcional: pega tus apuntes, una lectura o los estándares)")}</label>
     <textarea class="inp notes" id="kNotes" placeholder="${T("Leave empty and the AI covers the main ideas of the topic.", "Déjalo vacío y la IA cubre las ideas principales del tema.")}"></textarea>
     <span class="field">${T("Highlight with", "Resaltar con")}</span>
@@ -1602,23 +1617,16 @@ function topicSheet(id, unitId){
     <div class="row"><button class="btn" id="kCopy">${T("Copy AI prompt", "Copiar instrucciones")}</button></div>
     <p class="msg" id="kCopyMsg"></p>
     <textarea class="inp" id="kPromptBox" readonly hidden></textarea>
-    <hr>
-    <label class="field" for="kSheet">${T("2. Paste the AI’s cheat sheet here", "2. Pega aquí la hoja de estudio de la IA")}</label>
-    <p class="small" style="margin:0 0 6px">${T("Paste it into an AI chat like ChatGPT, Gemini, or Claude, then use the chat’s copy button on its answer. You can also type or fix it here: words in **double stars** are highlighted.", "Pégalas en un chat de IA como ChatGPT, Gemini o Claude, y usa el botón de copiar del chat en su respuesta. También puedes escribir o corregir aquí: las palabras entre **dos estrellas** se resaltan.")}</p>
-    <textarea class="inp" id="kSheet" spellcheck="false" placeholder="Title: …&#10;Summary: …&#10;# …&#10;- … **…** …&#10;Vocab: …: …&#10;Remember: …">${esc(t.sheet)}</textarea>
-    <p class="msg" id="kSheetMsg"></p>
-    <div class="preview" id="kPrev" hidden></div>
-    <hr>
-    <span class="field">${T("Spanish cheat sheet (optional)", "Hoja de estudio en español (opcional)")}</span>
+    </details>
+    <details class="fold"${t.es && t.es.sheet ? " open" : ""}>
+      <summary>${T("Optional: Spanish cheat sheet", "Opcional: hoja de estudio en español")}</summary>
     <p class="small" style="margin:0 0 6px">${T("For students who choose Español. Make the English one first, copy the translation prompt into an AI chat, and paste its answer here.", "Para los estudiantes que eligen español. Primero haz la de inglés, copia las instrucciones de traducción en un chat de IA y pega aquí su respuesta.")}</p>
     <div class="row" style="margin-top:0"><button class="btn ghost" id="kEsCopy">${T("Copy translation prompt", "Copiar instrucciones de traducción")}</button></div>
     <p class="msg" id="kEsCopyMsg"></p>
     <textarea class="inp" id="kEsPromptBox" readonly hidden></textarea>
     <textarea class="inp" id="kEs" spellcheck="false" style="margin-top:10px" placeholder="Title: …&#10;Summary: …&#10;# …">${esc(t.es ? t.es.sheet : "")}</textarea>
     <p class="msg" id="kEsMsg"></p>
-    <hr>
-    <p class="msg warn" id="kErr"></p>
-    <div class="row"><button class="btn" id="kSave">${id ? T("Save topic", "Guardar tema") : T("Add topic", "Agregar tema")}</button><button class="btn ghost" id="sBack">${T("Back", "Atrás")}</button></div>
+    </details>
     ${id ? `<div class="row"><button class="btn ghost" id="kDel">${T("Delete this topic", "Borrar este tema")}</button></div>` : ""}`, { tall: true });
   bindBack(() => topicBack());
   const opts = () => ({ title: $("#kTitle").value.trim(), course: c.title, grade: c.grade, notes: $("#kNotes").value.trim(), vocab: $("#kVocab").checked, rem: $("#kRem").checked, formula: $("#kFormula").checked, len: $("#kLen").value });
@@ -1638,8 +1646,8 @@ function topicSheet(id, unitId){
     if (s.rem) bits.push(T(`${s.rem} callouts`, `${s.rem} recuadros`));
     if (s.formula) bits.push(T(`${s.formula} formulas`, `${s.formula} fórmulas`));
     if (s.ex) bits.push(T(`${s.ex} examples`, `${s.ex} ejemplos`));
-    msg.className = "msg" + (s.marked ? "" : " warn");
-    msg.textContent = T("Cheat sheet ready: ", "Hoja lista: ") + bits.join(", ") + "." + (s.marked ? T(" Preview:", " Vista previa:") : T(" No key words are highlighted yet: ask the AI to wrap key words in **double stars**, or copy its answer with its copy button. Preview:", " Todavía no hay palabras resaltadas: pídele a la IA que ponga las palabras clave entre **dos estrellas**, o copia su respuesta con su botón de copiar. Vista previa:"));
+    msg.className = "msg";
+    msg.textContent = T("Preview of what students see", "Vista previa de lo que ven los estudiantes") + (s.sections ? ` (${bits.join(", ")})` : "") + ":" + (s.marked ? "" : T(" Tip: put **double stars** around key words to highlight them.", " Consejo: pon **dos estrellas** alrededor de las palabras clave para resaltarlas."));
     prev.innerHTML = (s.s.title ? `<h3 style="font-size:1.4rem;color:var(--text)">${esc(s.s.title)}</h3>` : "") + (s.s.sum ? `<p class="intro">${esc(s.s.sum)}</p>` : "") + sheetHtml(txt, "en");
     prev.classList.add("card"); prev.hidden = false;
   };
@@ -1659,11 +1667,14 @@ function topicSheet(id, unitId){
     copyText(esSheetPrompt(txt), $("#kEsPromptBox"), $("#kEsCopyMsg"), T("Copied! Paste it into an AI chat.", "¡Copiado! Pégalo en un chat de IA."));
   });
   $("#kSave").addEventListener("click", () => {
+    if (!$("#kSheet").value.trim() && $("#kNotes").value.trim()){ $("#kSheet").value = $("#kNotes").value; $("#kNotes").value = ""; check(); }
     const sheet = $("#kSheet").value.trim(), s = parseSheet(sheet), title = $("#kTitle").value.trim().slice(0, 80) || s.title.slice(0, 80);
-    const err = $("#kErr");
-    if (!title) return err.textContent = T("Type a topic title.", "Escribe el título del tema.");
-    if (!s.blocks.length) return err.textContent = T("Paste the cheat sheet first.", "Primero pega la hoja de estudio.");
+    const err = $("#kErr"), fail = (t, box) => { err.textContent = t; err.scrollIntoView({ block: "center", behavior: "smooth" }); if (box) box.focus({ preventScroll: true }); };
+    err.textContent = "";
+    if (!title) return fail(T("Type a topic title.", "Escribe el título del tema."), $("#kTitle"));
+    if (!s.blocks.length) return fail(T("Type or paste your information in the Cheat sheet box first.", "Primero escribe o pega tu información en el cuadro Hoja de estudio."), $("#kSheet"));
     const u = c.units.find(x => x.id === $("#kUnit").value);
+    if (!u) return fail(T("Pick a unit for this topic.", "Elige una unidad para este tema."), $("#kUnit"));
     const tid = id || newTopicId(title), es = $("#kEs").value.trim(), se = parseSheet(es);
     c.topics[tid] = { title, sum: s.sum.slice(0, 240), sheet };
     if (es) c.topics[tid].es = { title: se.title.slice(0, 80), sum: se.sum.slice(0, 240), sheet: es };
