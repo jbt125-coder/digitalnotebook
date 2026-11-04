@@ -215,7 +215,10 @@ textarea.inp.link{min-height:0;height:90px;word-break:break-all}
 .mini.danger{color:var(--amber)}
 .savebar .btn{white-space:nowrap}
 .savebar #kSave{flex:2}
+.savebar #kErr{flex-basis:100%;margin:0}
+.savebar #kErr:empty{display:none}
 .savebar{position:sticky;bottom:calc(-22px - env(safe-area-inset-bottom,0px));background:var(--panel);margin:12px -22px 0;padding:12px 22px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);z-index:1}
+.fold *{box-sizing:border-box}
 .fold{border:1.5px solid var(--line);border-radius:16px;padding:0 16px;margin-top:16px;background:var(--sky2)}
 .fold summary{cursor:pointer;font-weight:700;color:var(--ice);padding:14px 0;list-style-position:inside}
 .fold[open]{padding-bottom:14px}
@@ -1597,8 +1600,6 @@ function topicSheet(id, unitId){
     <textarea class="inp" id="kSheet" spellcheck="true" placeholder="${T("Cells are the basic unit of life.&#10;# Parts of a cell&#10;- The **nucleus** holds the DNA.&#10;Vocab: membrane: the cell’s outer layer", "Las células son la unidad básica de la vida.&#10;# Partes de la célula&#10;- El **núcleo** guarda el ADN.&#10;Vocab: membrana: la capa exterior de la célula")}">${esc(t.sheet)}</textarea>
     <p class="msg" id="kSheetMsg"></p>
     <div class="preview" id="kPrev" hidden></div>
-    <p class="msg warn" id="kErr"></p>
-    <div class="row savebar"><button class="btn" id="kSave">${T("Save cheat sheet", "Guardar hoja de estudio")}</button><button class="btn ghost" id="sBack">${T("Back", "Atrás")}</button></div>
     <details class="fold">
       <summary>${T("Optional: have AI write it for you", "Opcional: que la IA la escriba por ti")}</summary>
     <p class="small" style="margin:10px 0 0">${T("Want AI to write it? Fill this in, copy the prompt into an AI chat like ChatGPT, Gemini, or Claude, then paste its answer into the <b>Cheat sheet</b> box above.", "¿Quieres que la IA la escriba? Llena esto, copia las instrucciones en un chat de IA como ChatGPT, Gemini o Claude, y pega su respuesta en el cuadro <b>Hoja de estudio</b> de arriba.")}</p>
@@ -1627,7 +1628,9 @@ function topicSheet(id, unitId){
     <textarea class="inp" id="kEs" spellcheck="false" style="margin-top:10px" placeholder="Title: …&#10;Summary: …&#10;# …">${esc(t.es ? t.es.sheet : "")}</textarea>
     <p class="msg" id="kEsMsg"></p>
     </details>
-    ${id ? `<div class="row"><button class="btn ghost" id="kDel">${T("Delete this topic", "Borrar este tema")}</button></div>` : ""}`, { tall: true });
+    ${id ? `<div class="row"><button class="btn ghost" id="kDel">${T("Delete this topic", "Borrar este tema")}</button></div>` : ""}
+    <div class="row savebar"><p class="msg warn" id="kErr"></p><button class="btn" id="kSave">${T("Save cheat sheet", "Guardar hoja de estudio")}</button><button class="btn ghost" id="sBack">${T("Back", "Atrás")}</button></div>
+`, { tall: true });
   bindBack(() => topicBack());
   const opts = () => ({ title: $("#kTitle").value.trim(), course: c.title, grade: c.grade, notes: $("#kNotes").value.trim(), vocab: $("#kVocab").checked, rem: $("#kRem").checked, formula: $("#kFormula").checked, len: $("#kLen").value });
   $("#kCopy").addEventListener("click", () => {
@@ -1669,7 +1672,7 @@ function topicSheet(id, unitId){
   $("#kSave").addEventListener("click", () => {
     if (!$("#kSheet").value.trim() && $("#kNotes").value.trim()){ $("#kSheet").value = $("#kNotes").value; $("#kNotes").value = ""; check(); }
     const sheet = $("#kSheet").value.trim(), s = parseSheet(sheet), title = $("#kTitle").value.trim().slice(0, 80) || s.title.slice(0, 80);
-    const err = $("#kErr"), fail = (t, box) => { err.textContent = t; err.scrollIntoView({ block: "center", behavior: "smooth" }); if (box) box.focus({ preventScroll: true }); };
+    const err = $("#kErr"), fail = (t, box) => { err.textContent = t; if (box){ box.scrollIntoView({ block: "center", behavior: "smooth" }); box.focus({ preventScroll: true }); } };
     err.textContent = "";
     if (!title) return fail(T("Type a topic title.", "Escribe el título del tema."), $("#kTitle"));
     if (!s.blocks.length) return fail(T("Type or paste your information in the Cheat sheet box first.", "Primero escribe o pega tu información en el cuadro Hoja de estudio."), $("#kSheet"));
