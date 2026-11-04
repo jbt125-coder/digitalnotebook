@@ -1386,6 +1386,7 @@ function cogSheet(){
       <button id="mQs"><b>${T("Review questions", "Preguntas de repaso")}</b><span>${T(`${c.q.length} questions for the review games, written by AI from your cheat sheets.`, `${c.q.length} preguntas para los juegos de repaso, escritas con IA a partir de tus hojas de estudio.`)}</span></button>
       <button id="mLink"><b>${T("Make a class link", "Hacer un enlace de clase")}</b><span>${T("A link that gives students your title page, cheat sheets, and games. Post it on Canvas or your class website.", "Un enlace que les da a tus estudiantes tu portada, hojas de estudio y juegos. Publícalo en Canvas o en el sitio web de tu clase.")}</span></button>
       <button id="mBackup"><b>${T("Backup", "Copia de seguridad")}</b><span>${T("Save everything to a file, or load it on another computer.", "Guarda todo en un archivo o cárgalo en otra computadora.")}</span></button>
+      <button id="mReset"><b>${T("Teacher reset", "Reinicio del maestro")}</b><span>${T("Reload the newest version of the notebook on this device. Needs your teacher code. Your notebook stays saved.", "Carga la versión más nueva del cuaderno en este aparato. Necesita tu código de maestro. Tu cuaderno se queda guardado.")}</span></button>
     </div>
     <p class="msg warn" id="mMsg" hidden></p>
     <p class="small" style="margin:14px 0 0;opacity:.7">${T("Notebook version", "Versión del cuaderno")}: ${NB_VERSION}</p>
@@ -1400,11 +1401,12 @@ function cogSheet(){
   $("#mQs").addEventListener("click", needTopics(() => questionsSheet()));
   $("#mLink").addEventListener("click", needTopics(linkSheet));
   $("#mBackup").addEventListener("click", backupSheet);
+  $("#mReset").addEventListener("click", resetSheet);
 }
 
 /* ---- teacher code: unlocks editing on a device that opened a student class link ---- */
 const TEACHER_CODE = "yourdadacademy";
-const NB_VERSION = "Nov 4, 2026 · Spanish preview";   // shown in the cog menu, so a teacher can tell if the browser has the newest copy
+const NB_VERSION = "Nov 4, 2026 · Teacher reset";   // shown in the cog menu, so a teacher can tell if the browser has the newest copy
 function teacherCodeSheet(){
   openSheet(`<h3 id="sheetTitle">${T("Teacher code", "Código de maestro")}</h3>
     <p>${T("<b>This notebook can’t be edited here.</b> It was opened from a student class link, so editing is locked on this device and students can’t change anything.", "<b>Este cuaderno no se puede editar aquí.</b> Se abrió con un enlace de clase para estudiantes, así que la edición está bloqueada en este aparato y los estudiantes no pueden cambiar nada.")}</p>
@@ -1442,6 +1444,35 @@ function unlockTeacher(useLink){
   if (u && !hasTopics(u)) history.replaceState(null, "", location.href.split("#")[0]);
   route();
   cogSheet();
+}
+
+/* ---- teacher reset: reload the newest version of the app (the notebook itself stays saved) ---- */
+function resetSheet(){
+  openSheet(`<h3 id="sheetTitle">${T("Teacher reset", "Reinicio del maestro")}</h3>
+    <p>${T("This reloads the newest version of the notebook on this device, skipping the old copy the browser saved. Your units, cheat sheets, and questions stay saved.", "Esto carga la versión más nueva del cuaderno en este aparato, sin usar la copia vieja que guardó el navegador. Tus unidades, hojas de estudio y preguntas se quedan guardadas.")}</p>
+    <p class="small">${T(`Version on this device now: <b>${NB_VERSION}</b>. If it’s the same after the reset, the newest update hasn’t finished publishing yet: try again in a few minutes.`, `Versión en este aparato ahora: <b>${NB_VERSION}</b>. Si sigue igual después del reinicio, la actualización todavía no termina de publicarse: inténtalo otra vez en unos minutos.`)}</p>
+    <label class="field" for="rsCode">${T("Teacher code", "Código de maestro")}</label>
+    <input class="inp" id="rsCode" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <div class="row"><button class="btn" id="rsGo">${T("Reset and reload", "Reiniciar y recargar")}</button></div>
+    <div class="msg" id="rsMsg"></div>
+    ${backRow()}`);
+  bindBack(cogSheet);
+  const inp = $("#rsCode"), msg = $("#rsMsg");
+  inp.focus();
+  const go = () => {
+    if (inp.value.trim().toLowerCase().replace(/\s+/g, "") !== TEACHER_CODE){
+      msg.className = "msg warn"; msg.textContent = T("That’s not the teacher code.", "Ese no es el código de maestro."); inp.select(); return;
+    }
+    msg.className = "msg"; msg.textContent = T("Reloading…", "Recargando…");
+    const reload = () => { const u = new URL(location.href); u.searchParams.set("fresh", Date.now()); location.replace(u.toString()); };
+    const jobs = [];
+    try { if (window.caches) jobs.push(caches.keys().then(ks => Promise.all(ks.map(k => caches.delete(k))))); } catch(e){}
+    try { if (navigator.serviceWorker) jobs.push(navigator.serviceWorker.getRegistrations().then(rs => Promise.all(rs.map(r => r.unregister())))); } catch(e){}
+    Promise.all(jobs).then(reload, reload);
+    setTimeout(reload, 2000);   // never hang on the cleanup
+  };
+  $("#rsGo").addEventListener("click", go);
+  inp.addEventListener("keydown", e => { if (e.key === "Enter") go(); });
 }
 
 /* ---- title page: course name, teacher, theme ---- */
@@ -2034,6 +2065,9 @@ loadClass();
     if (CLASS && !save.profile) profileSheet(true);
     else if (bad) openSheet(`<h3 id="sheetTitle">${T("Link not working", "El enlace no funciona")}</h3><p>${T("This class link didn’t open. It may have been cut off when it was copied. Ask your teacher for the link again.", "Este enlace de clase no se abrió. Puede que se haya cortado al copiarlo. Pídele el enlace otra vez a tu maestro.")}</p><div class="row"><button class="btn" data-close>OK</button></div>`);
   };
+  if (/[?&]fresh=/.test(location.search)){   // back from a teacher reset: drop the cache-busting tag from the address
+    const u = new URL(location.href); u.searchParams.delete("fresh"); history.replaceState(null, "", u.toString());
+  }
   if (location.hash === "#teacher"){   // teacher's way out of a class link on their own device
     try { localStorage.removeItem(CLASS_KEY); } catch(e){}
     CLASS = null; history.replaceState(null, "", location.href.split("#")[0]);
