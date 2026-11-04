@@ -1424,7 +1424,7 @@ function cogSheet(){
 
 /* ---- teacher code: unlocks editing on a device that opened a student class link ---- */
 const TEACHER_CODE = "yourdadacademy";
-const NB_VERSION = "Nov 4, 2026 · iPhone";   // shown in the cog menu, so a teacher can tell if the browser has the newest copy
+const NB_VERSION = "Nov 4, 2026 · Questions helper";   // shown in the cog menu, so a teacher can tell if the browser has the newest copy
 function teacherCodeSheet(){
   openSheet(`<h3 id="sheetTitle">${T("Teacher code", "Código de maestro")}</h3>
     <p>${T("<b>This notebook can’t be edited here.</b> It was opened from a student class link, so editing is locked on this device and students can’t change anything.", "<b>Este cuaderno no se puede editar aquí.</b> Se abrió con un enlace de clase para estudiantes, así que la edición está bloqueada en este aparato y los estudiantes no pueden cambiar nada.")}</p>
@@ -1650,6 +1650,7 @@ function topicSheet(id, unitId){
     <p class="small" style="margin:0 0 6px">${T("Type or paste your information here: plain text works, and each line shows as its own line. Optional extras: start a line with <b>#</b> for a section heading or <b>-</b> for a bullet, put <b>**double stars**</b> around key words to highlight them, and use <b>Vocab: word: meaning</b> or <b>Remember: …</b> for cards and callouts.", "Escribe o pega tu información aquí: el texto simple funciona, y cada renglón sale en su propio renglón. Extras opcionales: empieza un renglón con <b>#</b> para un título de sección o con <b>-</b> para una viñeta, pon <b>**dos estrellas**</b> alrededor de las palabras clave para resaltarlas, y usa <b>Vocab: palabra: significado</b> o <b>Remember: …</b> para tarjetas y recuadros.")}</p>
     <textarea class="inp" id="kSheet" spellcheck="true" placeholder="${T("Cells are the basic unit of life.&#10;# Parts of a cell&#10;- The **nucleus** holds the DNA.&#10;Vocab: membrane: the cell’s outer layer", "Las células son la unidad básica de la vida.&#10;# Partes de la célula&#10;- El **núcleo** guarda el ADN.&#10;Vocab: membrana: la capa exterior de la célula")}">${esc(t.sheet)}</textarea>
     <p class="msg" id="kSheetMsg"></p>
+    <div class="msg warn" id="kSheetQs" hidden><p style="margin:0 0 8px">${T("These look like <b>review questions</b>, not a cheat sheet. Questions (with their Spanish <b>Pregunta:</b> lines) go in <b>Review questions</b>, where the games use them.", "Esto parecen <b>preguntas de repaso</b>, no una hoja de estudio. Las preguntas (con sus líneas <b>Pregunta:</b> en español) van en <b>Preguntas de repaso</b>, donde las usan los juegos.")}</p><button class="btn" data-moveqs>${T("Add these as review questions", "Agregarlas como preguntas de repaso")}</button></div>
     <div class="preview" id="kPrev" hidden></div>
     <details class="fold">
       <summary>${T("Optional: have AI write it for you", "Opcional: que la IA la escriba por ti")}</summary>
@@ -1678,6 +1679,7 @@ function topicSheet(id, unitId){
     <textarea class="inp" id="kEsPromptBox" readonly hidden></textarea>
     <textarea class="inp" id="kEs" spellcheck="false" style="margin-top:10px" placeholder="Title: …&#10;Summary: …&#10;# …">${esc(t.es ? t.es.sheet : "")}</textarea>
     <p class="msg" id="kEsMsg"></p>
+    <div class="msg warn" id="kEsQs" hidden><p style="margin:0 0 8px">${T("These look like <b>review questions</b>, not a cheat sheet. Questions (with their Spanish <b>Pregunta:</b> lines) go in <b>Review questions</b>, where the games use them.", "Esto parecen <b>preguntas de repaso</b>, no una hoja de estudio. Las preguntas (con sus líneas <b>Pregunta:</b> en español) van en <b>Preguntas de repaso</b>, donde las usan los juegos.")}</p><button class="btn" data-moveqs>${T("Add these as review questions", "Agregarlas como preguntas de repaso")}</button></div>
     <div class="preview" id="kEsPrev" hidden></div>
     <div class="row"><button class="btn" id="kEsSave">${T("Save cheat sheet (English and Spanish)", "Guardar hoja de estudio (inglés y español)")}</button></div>
     <p class="small" style="margin:8px 0 0">${T("This saves both versions together. The bottom <b>Save cheat sheet</b> button does the same.", "Esto guarda las dos versiones juntas. El botón <b>Guardar hoja de estudio</b> de abajo hace lo mismo.")}</p>
@@ -1695,6 +1697,8 @@ function topicSheet(id, unitId){
   });
   const check = () => {
     const txt = $("#kSheet").value, msg = $("#kSheetMsg"), prev = $("#kPrev");
+    $("#kSheetQs").hidden = !looksLikeQuestions(txt);
+    if (looksLikeQuestions(txt)){ msg.textContent = ""; prev.hidden = true; return; }
     if (!txt.trim()){ msg.textContent = ""; prev.hidden = true; return; }
     const s = sheetStats(txt);
     if (s.s.title && !$("#kTitle").value.trim()) $("#kTitle").value = s.s.title;
@@ -1710,6 +1714,8 @@ function topicSheet(id, unitId){
   };
   const checkEs = () => {
     const txt = $("#kEs").value, msg = $("#kEsMsg"), prev = $("#kEsPrev");
+    $("#kEsQs").hidden = !looksLikeQuestions(txt);
+    if (looksLikeQuestions(txt)){ msg.textContent = ""; prev.hidden = true; return; }
     prev.hidden = !txt.trim();
     if (!txt.trim()){ msg.className = "msg"; msg.textContent = T("No Spanish cheat sheet. Students who choose Español see the English one.", "No hay hoja en español. Los estudiantes que eligen español ven la de inglés."); return; }
     const s = sheetStats(txt);
@@ -1727,6 +1733,12 @@ function topicSheet(id, unitId){
     copyText(esSheetPrompt(txt), $("#kEsPromptBox"), $("#kEsCopyMsg"), T("Copied! Paste it into an AI chat.", "¡Copiado! Pégalo en un chat de IA."));
   });
   $("#kEsSave").addEventListener("click", () => $("#kSave").click());
+  $("#sheet").querySelectorAll("[data-moveqs]").forEach(btn => btn.addEventListener("click", () => {
+    const box = btn.closest("#kSheetQs") ? $("#kSheet") : $("#kEs"), txt = box.value;
+    box.value = ""; check(); checkEs();
+    if ($("#kTitle").value.trim() && $("#kSheet").value.trim()) $("#kSave").click();   // keep the cheat sheet that's there
+    questionsSheet(id ? [id] : null, txt);
+  }));
   ["#kTitle", "#kSheet", "#kEs"].forEach(b => $(b).addEventListener("input", () => { $("#kErr").textContent = ""; }));
   $("#kSave").addEventListener("click", () => {
     if (!$("#kSheet").value.trim() && $("#kNotes").value.trim()){ $("#kSheet").value = $("#kNotes").value; $("#kNotes").value = ""; check(); }
@@ -1788,7 +1800,8 @@ If you run out of room, stop after a complete question. I will type "continue" a
 CHEAT SHEETS
 ${ids.map(id => `=== ${id}: ${c.topics[id].title} ===\n${sheetPlain(c.topics[id].sheet)}`).join("\n\n")}`;
 }
-function questionsSheet(pick){
+function looksLikeQuestions(t){ return /^\s*(question|pregunta)\s*:/im.test(t) && /^\s*answer\s*:/im.test(t) && /^\s*[a-d]\s*[:.)]/im.test(t); }
+function questionsSheet(pick, paste){
   const c = course, selected = new Set(Array.isArray(pick) ? pick.filter(id => c.topics[id]) : Object.keys(c.topics).filter(id => !c.q.some(q => q.tp === id)));
   openSheet(`<h3 id="sheetTitle">${T("Review questions", "Preguntas de repaso")}</h3>
     <p>${T("The review games use these questions. An AI writes them from your cheat sheets.", "Los juegos de repaso usan estas preguntas. Una IA las escribe a partir de tus hojas de estudio.")}</p>
@@ -1805,7 +1818,8 @@ function questionsSheet(pick){
     <p class="msg" id="cCopyMsg"></p>
     <textarea class="inp" id="cPromptBox" readonly hidden></textarea>
     <hr>
-    <label class="field" for="cPaste">${T("Paste the AI’s questions here", "Pega aquí las preguntas de la IA")}</label>
+    <label class="field" for="cPaste">${T("Paste the questions here", "Pega aquí las preguntas")}</label>
+    <p class="small" style="margin:0 0 6px">${T("English and Spanish go in this same box: each question’s <b>Pregunta:</b> lines come right after its English lines. You can also type your own questions in this format.", "El inglés y el español van en este mismo cuadro: las líneas <b>Pregunta:</b> de cada pregunta van justo después de sus líneas en inglés. También puedes escribir tus propias preguntas en este formato.")}</p>
     <textarea class="inp" id="cPaste" spellcheck="false" placeholder="Topic: …&#10;Question: …&#10;A: …&#10;B: …&#10;C: …&#10;D: …&#10;Answer: B&#10;Pregunta: …&#10;A: …"></textarea>
     <div class="row"><button class="btn" id="cAdd">${T("Add questions", "Agregar preguntas")}</button></div>
     <div class="msg" id="cAddMsg"></div>
@@ -1822,6 +1836,7 @@ function questionsSheet(pick){
     $("#cTotal").textContent = T(`${c.q.length} questions in all.`, `${c.q.length} preguntas en total.`);
   };
   drawPick();
+  if (paste) setTimeout(() => { $("#cPaste").value = paste; $("#cAdd").click(); $("#cAddMsg").scrollIntoView({ block: "center" }); }, 0);
   $("#cCopy").addEventListener("click", () => {
     const per = Math.min(50, Math.max(1, parseInt($("#cPer").value, 10) || 20));
     c.pref.perTopic = per; writeCourse();
