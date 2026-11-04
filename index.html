@@ -68,7 +68,9 @@ select{width:100%;appearance:none;-webkit-appearance:none;background:var(--panel
 
 /* Page chrome */
 .page{max-width:680px;margin:0 auto;padding:12px 20px 40px}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 18px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 56px 18px 0}
+.teach-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:22px;padding-top:16px;border-top:1px dashed var(--line)}
+.teach-row .btn{font-size:15px}
 .back{background:none;border:0;color:var(--ice);font-weight:700;padding:8px 4px;cursor:pointer;font-size:16px}
 .back::before{content:"‹ ";font-size:1.2em}
 .crumb{color:var(--muted);font-size:14px;text-align:right}
@@ -153,7 +155,7 @@ mark{background:var(--amberMark);color:inherit;border-radius:5px;padding:0 3px;-
 .rw-acts .btn{padding:10px 14px;font-size:15px;flex:1}
 
 /* Cog, profile, games */
-.cog{position:absolute;top:12px;right:12px;z-index:2;width:46px;height:46px;border-radius:50%;border:1.5px solid var(--line);background:var(--glass);display:grid;place-items:center;cursor:pointer;padding:0}
+.cog{position:fixed;top:12px;right:12px;z-index:10;width:46px;height:46px;border-radius:50%;border:1.5px solid var(--line);background:var(--glass);display:grid;place-items:center;cursor:pointer;padding:0}
 .cog svg{width:24px;height:24px}
 .cog path{fill:var(--ice)}
 .games-label{margin-top:22px}
@@ -220,9 +222,10 @@ textarea.inp.link{min-height:0;height:90px;word-break:break-all}
 </head>
 <body>
 
+  <button class="cog" id="cogBtn" data-i18n-label="cogLabel" aria-label="Teacher settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.3 7.3 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0-.5.4l-.4 2.7a7.6 7.6 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5a.5.5 0 0 0 .6.2l2.5-1a7.3 7.3 0 0 0 1.7 1l.4 2.6a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.4l.4-2.7a7.6 7.6 0 0 0 1.7-1l2.5 1a.5.5 0 0 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg></button>
+
 <section id="title" class="view" aria-labelledby="app-title">
   <div class="stars" id="stars" aria-hidden="true"></div>
-  <button class="cog" id="cogBtn" data-i18n-label="cogLabel" aria-label="Teacher settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.3 7.3 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0-.5.4l-.4 2.7a7.6 7.6 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5a.5.5 0 0 0 .6.2l2.5-1a7.3 7.3 0 0 0 1.7 1l.4 2.6a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.4l.4-2.7a7.6 7.6 0 0 0 1.7-1l2.5 1a.5.5 0 0 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg></button>
   <div class="title-inner">
     <div class="classbar" id="classBar" hidden></div>
     <h1 id="app-title"></h1>
@@ -272,6 +275,7 @@ textarea.inp.link{min-height:0;height:90px;word-break:break-all}
     <p class="hint" data-i18n="dragHint">Press and hold a topic, then drag to move it.</p>
     <ul class="toc" id="tocList"></ul>
     <div class="reset-row"><button class="linkish" id="resetOrder" hidden></button></div>
+    <div class="teach-row" id="tocTeach" hidden><button class="btn ghost" id="tEditUnit"></button><button class="btn ghost" id="tEditUnitQs"></button></div>
   </div>
 </section>
 
@@ -285,6 +289,7 @@ textarea.inp.link{min-height:0;height:90px;word-break:break-all}
     <div class="next-row">
       <button class="btn wide" id="nextBtn" data-i18n="next">Done, next topic</button>
     </div>
+    <div class="teach-row" id="cardTeach" hidden><button class="btn ghost" id="tEditSheet"></button><button class="btn ghost" id="tEditCardQs"></button></div>
   </div>
 </section>
 
@@ -937,7 +942,6 @@ function renderTitle(){
     <p>${T("<b>Teachers:</b> tap the cog in the corner to name your class, pick a theme, and add cheat sheets.", "<b>Maestros:</b> toquen el engranaje de la esquina para ponerle nombre a su clase, elegir un tema y agregar hojas de estudio.")}</p>
     <p>${T("<b>Students:</b> open the class link your teacher gave you.", "<b>Estudiantes:</b> abran el enlace de clase que les dio su maestro.")}</p>`;
   $(".lede").hidden = !units.length;
-  $("#cogBtn").hidden = !!CLASS;
   const bar = $("#classBar");
   bar.hidden = !CLASS || !CLASS.t;
   if (CLASS && CLASS.t) bar.innerHTML = `<b>${esc(CLASS.t)}</b>`;
@@ -979,8 +983,15 @@ function openToc(u){
   $("#meterFill").style.width = (n / order.length * 100) + "%";
   const rb = $("#resetOrder");
   rb.hidden = !Array.isArray(save.order[u]);
+  teachRow("#tocTeach", [T("✎ Edit units and cheat sheets", "✎ Editar unidades y hojas de estudio"), T("✎ Edit this unit’s questions", "✎ Editar las preguntas de esta unidad")]);
   rb.textContent = c.teacher ? T(`Reset to ${c.teacher}’s order`, `Volver al orden de ${c.teacher}`) : T("Reset to the teacher’s order", "Volver al orden del maestro");
   show("toc");
+}
+
+/* teacher's edit buttons inside a unit: only on the teacher's own notebook, never on a student link */
+function teachRow(sel, labels){
+  const row = $(sel); row.hidden = !!CLASS;
+  row.querySelectorAll("button").forEach((b, i) => { b.textContent = labels[i]; });
 }
 
 let currentCard = null;
@@ -993,6 +1004,7 @@ function openCard(u, id){
   const body = sheetHtml(t.sheet);
   $("#cardBody").innerHTML = `<div class="card-band">${themeSvg(c.theme)}</div><h2>${esc(t.title)}</h2>${t.sum ? `<p class="intro">${esc(t.sum)}</p>` : ""}${body || `<p class="empty-sheet">${T("This topic doesn’t have a cheat sheet yet.", "Este tema todavía no tiene hoja de estudio.")}</p>`}`;
   const order = getOrder(u), next = order[order.indexOf(id) + 1];
+  teachRow("#cardTeach", [T("✎ Edit this cheat sheet", "✎ Editar esta hoja de estudio"), T("✎ Edit this topic’s questions", "✎ Editar las preguntas de este tema")]);
   $("#nextBtn").textContent = next ? T("Done, next topic", "Listo, siguiente tema") : T("Done, back to contents", "Listo, volver al contenido");
   show("card");
 }
@@ -1088,7 +1100,7 @@ function openSheet(html, o = {}){
   $("#scrim").classList.add("on");
   const b = sh.querySelector("button"); if (b) b.focus({ preventScroll: true });
 }
-function closeSheet(){ $("#scrim").classList.remove("on"); sheetLocked = false; applyTheme(C().theme); }   // drops a theme the title page screen was only previewing
+function closeSheet(){ $("#scrim").classList.remove("on"); sheetLocked = false; applyTheme(C().theme); if (!views.title.classList.contains("on")){ const y = window.scrollY; route(); window.scrollTo(0, y); } }   // drops a theme the title page screen was only previewing
 $("#scrim").addEventListener("click", e => { if ((e.target.id === "scrim" && !sheetLocked) || e.target.dataset.close !== undefined) closeSheet(); });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !sheetLocked) closeSheet(); });
 
@@ -1355,23 +1367,70 @@ function bindBack(to){ $("#sBack").addEventListener("click", to); }
 function saved(){ if (!writeCourse()) alert(T("This browser couldn’t save. Try Safari or Chrome, and make sure you’re not in a private window.", "Este navegador no pudo guardar. Prueba Safari o Chrome, y asegúrate de que no estás en una ventana privada.")); renderTitle(); }
 
 function cogSheet(){
-  if (CLASS) return;   // students on a class link can't change the notebook
+  if (CLASS) return teacherCodeSheet();   // a student link: locked until the teacher code is typed
   const c = course, nT = Object.keys(c.topics).length;
   openSheet(`<h3 id="sheetTitle">${T("Teacher settings", "Ajustes del maestro")}</h3>
     <p>${T("Everything you make here is saved in this browser. Share it with students by making a class link.", "Todo lo que hagas aquí se guarda en este navegador. Compártelo con tus estudiantes haciendo un enlace de clase.")}</p>
     <div class="menu">
       <button id="mTitle"><b>${T("Edit title page", "Editar la portada")}</b><span>${esc(courseTitle())}${c.teacher ? " · " + esc(c.teacher) : ""} · ${esc(themeOf(c.theme).n[LANG === "es" ? 1 : 0])}</span></button>
       <button id="mUnits"><b>${T("Units and cheat sheets", "Unidades y hojas de estudio")}</b><span>${T(`${c.units.length} ${c.units.length === 1 ? "unit" : "units"}, ${nT} ${nT === 1 ? "topic" : "topics"}. Paste in AI-made cheat sheets; each one becomes a topic.`, `${c.units.length} ${c.units.length === 1 ? "unidad" : "unidades"}, ${nT} ${nT === 1 ? "tema" : "temas"}. Pega hojas de estudio hechas con IA; cada una es un tema.`)}</span></button>
-      <button id="mQs"${nT ? "" : " disabled"}><b>${T("Review questions", "Preguntas de repaso")}</b><span>${T(`${c.q.length} questions for the review games, written by AI from your cheat sheets.`, `${c.q.length} preguntas para los juegos de repaso, escritas con IA a partir de tus hojas de estudio.`)}</span></button>
-      <button id="mLink"${nT ? "" : " disabled"}><b>${T("Make a class link", "Hacer un enlace de clase")}</b><span>${T("A link that gives students your title page, cheat sheets, and games. Post it on Canvas or your class website.", "Un enlace que les da a tus estudiantes tu portada, hojas de estudio y juegos. Publícalo en Canvas o en el sitio web de tu clase.")}</span></button>
+      <button id="mQs"><b>${T("Review questions", "Preguntas de repaso")}</b><span>${T(`${c.q.length} questions for the review games, written by AI from your cheat sheets.`, `${c.q.length} preguntas para los juegos de repaso, escritas con IA a partir de tus hojas de estudio.`)}</span></button>
+      <button id="mLink"><b>${T("Make a class link", "Hacer un enlace de clase")}</b><span>${T("A link that gives students your title page, cheat sheets, and games. Post it on Canvas or your class website.", "Un enlace que les da a tus estudiantes tu portada, hojas de estudio y juegos. Publícalo en Canvas o en el sitio web de tu clase.")}</span></button>
       <button id="mBackup"><b>${T("Backup", "Copia de seguridad")}</b><span>${T("Save everything to a file, or load it on another computer.", "Guarda todo en un archivo o cárgalo en otra computadora.")}</span></button>
     </div>
+    <p class="msg warn" id="mMsg" hidden></p>
     <div class="row"><button class="btn ghost" data-close>${T("Close", "Cerrar")}</button></div>`, { tall: true });
+  const needTopics = fn => () => {
+    if (Object.keys(course.topics).length) return fn();
+    const m = $("#mMsg"); m.hidden = false;
+    m.innerHTML = T("Add a unit and a cheat sheet first (in <b>Units and cheat sheets</b>). Questions and class links are made from your cheat sheets.", "Primero agrega una unidad y una hoja de estudio (en <b>Unidades y hojas de estudio</b>). Las preguntas y los enlaces se hacen a partir de tus hojas de estudio.");
+  };
   $("#mTitle").addEventListener("click", titleSheet);
   $("#mUnits").addEventListener("click", unitsSheet);
-  $("#mQs").addEventListener("click", questionsSheet);
-  $("#mLink").addEventListener("click", linkSheet);
+  $("#mQs").addEventListener("click", needTopics(() => questionsSheet()));
+  $("#mLink").addEventListener("click", needTopics(linkSheet));
   $("#mBackup").addEventListener("click", backupSheet);
+}
+
+/* ---- teacher code: unlocks editing on a device that opened a student class link ---- */
+const TEACHER_CODE = "yourdadacademy";
+function teacherCodeSheet(){
+  openSheet(`<h3 id="sheetTitle">${T("Teacher code", "Código de maestro")}</h3>
+    <p>${T("<b>This notebook can’t be edited here.</b> It was opened from a student class link, so editing is locked on this device and students can’t change anything.", "<b>Este cuaderno no se puede editar aquí.</b> Se abrió con un enlace de clase para estudiantes, así que la edición está bloqueada en este aparato y los estudiantes no pueden cambiar nada.")}</p>
+    <p>${T("Teachers: type your teacher code to unlock editing.", "Maestros: escriban su código de maestro para desbloquear la edición.")}</p>
+    <label class="field" for="tcCode">${T("Teacher code", "Código de maestro")}</label>
+    <input class="inp" id="tcCode" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <div class="row"><button class="btn" id="tcGo">${T("Unlock", "Desbloquear")}</button><button class="btn ghost" data-close>${T("Close", "Cerrar")}</button></div>
+    <div class="msg" id="tcMsg"></div>`);
+  const inp = $("#tcCode"), msg = $("#tcMsg");
+  inp.focus();
+  const check = () => {
+    if (inp.value.trim().toLowerCase().replace(/\s+/g, "") !== TEACHER_CODE){
+      msg.className = "msg warn";
+      msg.innerHTML = T("That’s not the teacher code. This is a student link, so it can’t be edited without it.", "Ese no es el código de maestro. Este es un enlace para estudiantes, así que no se puede editar sin él.");
+      inp.select(); return;
+    }
+    if (!Object.keys(course.topics).length) return unlockTeacher(true);   // nothing saved here yet: edit what the link has
+    openSheet(`<h3 id="sheetTitle">${T("Unlocked", "Desbloqueado")}</h3>
+      <p>${T("This browser already has a notebook of yours saved. Which one do you want to edit?", "Este navegador ya tiene guardado un cuaderno tuyo. ¿Cuál quieres editar?")}</p>
+      <div class="menu">
+        <button id="tcMine"><b>${T("My saved notebook", "Mi cuaderno guardado")}</b><span>${esc(course.title || T("My Class", "Mi clase"))} · ${T(`${Object.keys(course.topics).length} topics`, `${Object.keys(course.topics).length} temas`)}</span></button>
+        <button id="tcLink"><b>${T("The notebook from this class link", "El cuaderno de este enlace de clase")}</b><span>${esc(CLASS.c.title || T("My Class", "Mi clase"))} · ${T(`${Object.keys(CLASS.c.topics).length} topics. Replaces the notebook saved in this browser.`, `${Object.keys(CLASS.c.topics).length} temas. Reemplaza el cuaderno guardado en este navegador.`)}</span></button>
+      </div>`, { tall: true });
+    $("#tcMine").addEventListener("click", () => unlockTeacher(false));
+    $("#tcLink").addEventListener("click", () => unlockTeacher(true));
+  };
+  $("#tcGo").addEventListener("click", check);
+  inp.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+}
+function unlockTeacher(useLink){
+  if (useLink && CLASS){ course = checkCourse(JSON.parse(JSON.stringify(CLASS.c))) || course; writeCourse(); }
+  try { localStorage.removeItem(CLASS_KEY); } catch(e){}
+  CLASS = null;
+  const [u] = location.hash.replace(/^#/, "").split("/");
+  if (u && !hasTopics(u)) history.replaceState(null, "", location.href.split("#")[0]);
+  route();
+  cogSheet();
 }
 
 /* ---- title page: course name, teacher, theme ---- */
@@ -1410,10 +1469,10 @@ function unitsSheet(){
   const c = course;
   const unitHtml = (u, i) => `<div class="unit" data-u="${u.id}">
       <div class="unit-head"><b>${esc(u.name)}</b>
-        <button class="mini" data-act="uup" ${i ? "" : "disabled"} aria-label="${T("Move up", "Subir")}">↑</button><button class="mini" data-act="udown" ${i < c.units.length - 1 ? "" : "disabled"} aria-label="${T("Move down", "Bajar")}">↓</button>
+        <button class="mini" data-act="uup" ${i ? "" : 'style="visibility:hidden"'} aria-label="${T("Move up", "Subir")}">↑</button><button class="mini" data-act="udown" ${i < c.units.length - 1 ? "" : 'style="visibility:hidden"'} aria-label="${T("Move down", "Bajar")}">↓</button>
         <button class="mini" data-act="uren">${T("Rename", "Renombrar")}</button><button class="mini danger" data-act="udel">${T("Delete", "Borrar")}</button></div>
       ${u.tp.map((id, j) => { const t = c.topics[id], n = c.q.filter(q => q.tp === id).length; return `<div class="trow" data-tp="${id}"><span>${esc(t.title)}<small>${T(`${n} questions`, `${n} preguntas`)}${t.es && t.es.sheet ? " · Español ✓" : ""}</small></span>
-        <button class="mini" data-act="tup" ${j ? "" : "disabled"} aria-label="${T("Move up", "Subir")}">↑</button><button class="mini" data-act="tdown" ${j < u.tp.length - 1 ? "" : "disabled"} aria-label="${T("Move down", "Bajar")}">↓</button>
+        <button class="mini" data-act="tup" ${j ? "" : 'style="visibility:hidden"'} aria-label="${T("Move up", "Subir")}">↑</button><button class="mini" data-act="tdown" ${j < u.tp.length - 1 ? "" : 'style="visibility:hidden"'} aria-label="${T("Move down", "Bajar")}">↓</button>
         <button class="mini" data-act="tedit">${T("Edit", "Editar")}</button></div>`; }).join("")}
       <div class="row" style="margin-top:10px"><button class="btn ghost" data-act="tadd">+ ${T("Add a cheat sheet", "Agregar una hoja de estudio")}</button></div>
     </div>`;
@@ -1603,8 +1662,8 @@ If you run out of room, stop after a complete question. I will type "continue" a
 CHEAT SHEETS
 ${ids.map(id => `=== ${id}: ${c.topics[id].title} ===\n${sheetPlain(c.topics[id].sheet)}`).join("\n\n")}`;
 }
-function questionsSheet(){
-  const c = course, selected = new Set(Object.keys(c.topics).filter(id => !c.q.some(q => q.tp === id)));
+function questionsSheet(pick){
+  const c = course, selected = new Set(Array.isArray(pick) ? pick.filter(id => c.topics[id]) : Object.keys(c.topics).filter(id => !c.q.some(q => q.tp === id)));
   openSheet(`<h3 id="sheetTitle">${T("Review questions", "Preguntas de repaso")}</h3>
     <p>${T("The review games use these questions. An AI writes them from your cheat sheets.", "Los juegos de repaso usan estas preguntas. Una IA las escribe a partir de tus hojas de estudio.")}</p>
     <ol class="steps">
@@ -1633,17 +1692,14 @@ function questionsSheet(){
     const box = $("#cPick"), fresh = box.cloneNode(false);
     box.replaceWith(fresh);
     fresh.innerHTML = topicPicker(selected, countsBy(c.q), { needQ: false, showCount: true });
-    bindPicker(fresh, selected, () => {
-      $("#cCopy").disabled = !selected.size;
-      const n = c.q.filter(q => selected.has(q.tp)).length;
-      $("#cClear").disabled = !n;
-    });
+    bindPicker(fresh, selected, () => { $("#cCopyMsg").textContent = ""; });
     $("#cTotal").textContent = T(`${c.q.length} questions in all.`, `${c.q.length} preguntas en total.`);
   };
   drawPick();
   $("#cCopy").addEventListener("click", () => {
     const per = Math.min(50, Math.max(1, parseInt($("#cPer").value, 10) || 20));
     c.pref.perTopic = per; writeCourse();
+    if (!selected.size){ $("#cCopyMsg").className = "msg warn"; return $("#cCopyMsg").textContent = T("Tap at least one topic above first.", "Primero toca por lo menos un tema arriba."); }
     copyText(aiPrompt(topicsInOrder(selected), per), $("#cPromptBox"), $("#cCopyMsg"), T("Copied! Paste it into an AI chat.", "¡Copiado! Pégalo en un chat de IA."));
   });
   $("#cAdd").addEventListener("click", () => {
@@ -1666,6 +1722,7 @@ function questionsSheet(){
   });
   armed($("#cClear"), T("Delete the questions for the picked topics", "Borrar las preguntas de los temas elegidos"), T("Tap again to delete them", "Toca otra vez para borrarlas"), () => {
     const n = c.q.filter(q => selected.has(q.tp)).length;
+    if (!n){ $("#cClear").textContent = T("Delete the questions for the picked topics", "Borrar las preguntas de los temas elegidos"); $("#cAddMsg").className = "msg warn"; return $("#cAddMsg").textContent = T("The picked topics have no questions to delete.", "Los temas elegidos no tienen preguntas para borrar."); }
     c.q = c.q.filter(q => !selected.has(q.tp)); saved();
     $("#cClear").textContent = T("Delete the questions for the picked topics", "Borrar las preguntas de los temas elegidos");
     $("#cAddMsg").className = "msg"; $("#cAddMsg").textContent = T(`Deleted ${n} questions.`, `Se borraron ${n} preguntas.`);
@@ -1745,7 +1802,7 @@ function linkSheet(){
   const c = course, counts = countsBy(c.q), selected = new Set(Object.keys(c.topics)), games = new Set(GAMES);
   const gName = s => UI[s][LANG === "es" ? 1 : 0];
   openSheet(`<h3 id="sheetTitle">${T("Make a class link", "Hacer un enlace de clase")}</h3>
-    <p>${T("Students who open this link get your title page and theme, the topics you pick here with their cheat sheets, and the games. Post it on Canvas or your class website. Their device remembers it and hides the cog until they open a different class link.</p><p class=\"small\">Testing it yourself? Open it in a private window. If you open it on this device, the cog disappears here too: go to the notebook's address with <b>#teacher</b> at the end to get it back. Changed something? Make a new link and post it again.", "Los estudiantes que abran este enlace reciben tu portada y tema, los temas que elijas aquí con sus hojas de estudio, y los juegos. Publícalo en Canvas o en el sitio web de tu clase. Su aparato lo recuerda y esconde el engranaje hasta que abran otro enlace de clase.</p><p class=\"small\">¿Lo quieres probar? Ábrelo en una ventana privada. Si lo abres en este aparato, el engranaje también desaparece aquí: ve a la dirección del cuaderno con <b>#teacher</b> al final para recuperarlo. ¿Cambiaste algo? Haz un enlace nuevo y publícalo otra vez.")}</p>
+    <p>${T("Students who open this link get your title page and theme, the topics you pick here with their cheat sheets, and the games. Post it on Canvas or your class website. Their device remembers it and locks the cog, so students can't change anything.</p><p class=\"small\">Testing it yourself? Open it in a private window. If you open it on this device, editing locks here too: tap the cog and type your teacher code to unlock it. Changed something? Make a new link and post it again.", "Los estudiantes que abran este enlace reciben tu portada y tema, los temas que elijas aquí con sus hojas de estudio, y los juegos. Publícalo en Canvas o en el sitio web de tu clase. Su aparato lo recuerda y bloquea el engranaje, así que los estudiantes no pueden cambiar nada.</p><p class=\"small\">¿Lo quieres probar? Ábrelo en una ventana privada. Si lo abres en este aparato, la edición también se bloquea aquí: toca el engranaje y escribe tu código de maestro para desbloquearla. ¿Cambiaste algo? Haz un enlace nuevo y publícalo otra vez.")}</p>
     <label class="field" for="lName">${T("Banner on the title page (optional)", "Aviso en la portada (opcional)")}</label>
     <input class="inp" id="lName" maxlength="40" placeholder="${T("Unit 2 test review", "Repaso del examen 2")}">
     <span class="field">${T("Topics students can open (the number is how many questions each has)", "Temas que pueden abrir (el número es cuántas preguntas tiene cada uno)")}</span>
@@ -1806,6 +1863,10 @@ openBtn.addEventListener("click", () => {
 $("#saveCheckBtn").addEventListener("click", saveCheck);
 $("#profileBtn").addEventListener("click", () => profileSheet(false));
 $("#cogBtn").addEventListener("click", cogSheet);
+$("#tEditUnit").addEventListener("click", unitsSheet);
+$("#tEditUnitQs").addEventListener("click", () => questionsSheet((unitOf(currentU) || { tp: [] }).tp));
+$("#tEditSheet").addEventListener("click", () => topicSheet(currentCard));
+$("#tEditCardQs").addEventListener("click", () => questionsSheet([currentCard]));
 /* =========================================================
    REWARD CENTER  (coins, trophies, prizes and free plays; rewards.js keeps them on this device)
    ========================================================= */
