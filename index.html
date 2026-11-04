@@ -1388,6 +1388,7 @@ function cogSheet(){
       <button id="mBackup"><b>${T("Backup", "Copia de seguridad")}</b><span>${T("Save everything to a file, or load it on another computer.", "Guarda todo en un archivo o cárgalo en otra computadora.")}</span></button>
     </div>
     <p class="msg warn" id="mMsg" hidden></p>
+    <p class="small" style="margin:14px 0 0;opacity:.7">${T("Notebook version", "Versión del cuaderno")}: ${NB_VERSION}</p>
     <div class="row"><button class="btn ghost" data-close>${T("Close", "Cerrar")}</button></div>`, { tall: true });
   const needTopics = fn => () => {
     if (Object.keys(course.topics).length) return fn();
@@ -1403,6 +1404,7 @@ function cogSheet(){
 
 /* ---- teacher code: unlocks editing on a device that opened a student class link ---- */
 const TEACHER_CODE = "yourdadacademy";
+const NB_VERSION = "Nov 4, 2026 · Spanish preview";   // shown in the cog menu, so a teacher can tell if the browser has the newest copy
 function teacherCodeSheet(){
   openSheet(`<h3 id="sheetTitle">${T("Teacher code", "Código de maestro")}</h3>
     <p>${T("<b>This notebook can’t be edited here.</b> It was opened from a student class link, so editing is locked on this device and students can’t change anything.", "<b>Este cuaderno no se puede editar aquí.</b> Se abrió con un enlace de clase para estudiantes, así que la edición está bloqueada en este aparato y los estudiantes no pueden cambiar nada.")}</p>
@@ -1627,6 +1629,7 @@ function topicSheet(id, unitId){
     <textarea class="inp" id="kEsPromptBox" readonly hidden></textarea>
     <textarea class="inp" id="kEs" spellcheck="false" style="margin-top:10px" placeholder="Title: …&#10;Summary: …&#10;# …">${esc(t.es ? t.es.sheet : "")}</textarea>
     <p class="msg" id="kEsMsg"></p>
+    <div class="preview" id="kEsPrev" hidden></div>
     <div class="row"><button class="btn" id="kEsSave">${T("Save cheat sheet (English and Spanish)", "Guardar hoja de estudio (inglés y español)")}</button></div>
     <p class="small" style="margin:8px 0 0">${T("This saves both versions together. The bottom <b>Save cheat sheet</b> button does the same.", "Esto guarda las dos versiones juntas. El botón <b>Guardar hoja de estudio</b> de abajo hace lo mismo.")}</p>
     </details>
@@ -1657,11 +1660,14 @@ function topicSheet(id, unitId){
     prev.classList.add("card"); prev.hidden = false;
   };
   const checkEs = () => {
-    const txt = $("#kEs").value, msg = $("#kEsMsg");
+    const txt = $("#kEs").value, msg = $("#kEsMsg"), prev = $("#kEsPrev");
+    prev.hidden = !txt.trim();
     if (!txt.trim()){ msg.className = "msg"; msg.textContent = T("No Spanish cheat sheet. Students who choose Español see the English one.", "No hay hoja en español. Los estudiantes que eligen español ven la de inglés."); return; }
     const s = sheetStats(txt);
     msg.className = "msg";
-    msg.textContent = s.sections ? T(`Spanish cheat sheet ready: ${s.sections} sections.`, `Hoja en español lista: ${s.sections} secciones.`) : T("Spanish cheat sheet ready.", "Hoja en español lista.");
+    msg.textContent = (s.sections ? T(`Spanish cheat sheet ready: ${s.sections} sections.`, `Hoja en español lista: ${s.sections} secciones.`) : T("Spanish cheat sheet ready.", "Hoja en español lista.")) + T(" Preview of what students who choose Español see:", " Vista previa de lo que ven los estudiantes que eligen español:");
+    prev.innerHTML = (s.s.title ? `<h3 style="font-size:1.4rem;color:var(--text)">${esc(s.s.title)}</h3>` : "") + (s.s.sum ? `<p class="intro">${esc(s.s.sum)}</p>` : "") + sheetHtml(txt, "es");
+    prev.classList.add("card");
   };
   $("#kSheet").addEventListener("input", check); smartPaste($("#kSheet"), check);
   $("#kEs").addEventListener("input", checkEs); smartPaste($("#kEs"), checkEs);
